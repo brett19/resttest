@@ -65,10 +65,9 @@ function removeItem( id )
   startNavUpdate();
   $.ajax({
     type: 'POST',
-    url: 'test2.php',
+    url: 'api/delitem',
     dataType: 'json',
     data: {
-      act: 'delitem',
       itemId: id
     },
     success: handleItemData
@@ -80,10 +79,9 @@ function createNewGroup( parentId, name )
   startNavUpdate();
   $.ajax({
     type: 'POST',
-    url: 'test2.php',
+    url: 'api/newgroup',
     dataType: 'json',
     data: {
-      act: 'newgroup',
       parentId: parentId,
       name: name
     },
@@ -96,14 +94,28 @@ function createNewTest( parentId, name )
   startNavUpdate();
   $.ajax({
     type: 'POST',
-    url: 'test2.php',
+    url: 'api/newtest',
     dataType: 'json',
     data: {
-      act: 'newtest',
       parentId: parentId,
       name: name
     },
     success: handleItemData
+  });
+}
+
+function loadItemData()
+{
+  startNavUpdate();
+  $.ajax({
+    type: 'GET',
+    url: 'api/data',
+    dataType: 'json',
+    success: function(data, textStatus, xhr) {
+      itemData = data;
+      $('#itemlist_load').hide();
+      updateItemList( );
+    }
   });
 }
 
@@ -125,21 +137,6 @@ function startNavUpdate( )
   itemData = [];
   $('#itemlist li').remove();
   $('#itemlist_load').show();
-}
-
-function loadItemData()
-{
-  startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'test2.php',
-    dataType: 'json',
-    success: function(data, textStatus, xhr) {
-      itemData = data;
-      $('#itemlist_load').hide();
-      updateItemList( );
-    }
-  });
 }
 
 $(document).ready(function(){

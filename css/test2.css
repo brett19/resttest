@@ -52,10 +52,10 @@ body {
   display: block;
   padding: 2px 8px;
 }
-#wrapper ul li.group > label {
+#wrapper ul > li.group > label {
   font-weight: bold;
 }
-#wrapper ul li.test {
+#wrapper ul > li.test > label {
   text-decoration: underline;
 }
 
