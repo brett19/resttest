@@ -1,0 +1,124 @@
+{
+    "autoincrement": 1003,
+    "items": [
+        {
+            "id": 1,
+            "type": "group",
+            "name": "SocialAPI",
+            "children": [
+                {
+                    "id": 2,
+                    "type": "group",
+                    "name": "Base Tests",
+                    "children": [
+                        {
+                            "id": 3,
+                            "type": "test",
+                            "name": "Create Account",
+                            "children": [
+
+                            ],
+                            "actions": [
+                                {
+                                    "id": 100,
+                                    "type": "store",
+                                    "leftType": "variable",
+                                    "left": "gameKey1",
+                                    "rightType": "value",
+                                    "right": "356a192b7913b04c54574d18c28d46e6395428ab"
+                                },
+                                {
+                                    "id": 101,
+                                    "type": "store",
+                                    "leftType": "variable",
+                                    "left": "testEmail",
+                                    "rightType": "function",
+                                    "right": "randomEmail"
+                                },
+                                {
+                                    "id": 102,
+                                    "type": "rest",
+                                    "method": "POST",
+                                    "uri": "\/game\/#gameKey1\/session",
+                                    "headers": {
+                                        "Authorization": "Bearer #sessToken"
+                                    },
+                                    "body": "{\r\n      \"email\": \"#testEmail\",\r\n      \"pswd\": \"password\",\r\n      \"device\": {\r\n          \"deviceId\": \"01-02-03-04-05-06\",\r\n          \"manufacturer\": \"Samsung\",\r\n          \"hwType\": \"Galaxy Nexus\",\r\n          \"osType\": \"Android\",\r\n          \"osVersion\": \"4.2.1\"\r\n      }\r\n}"
+                                },
+                                {
+                                    "id": 103,
+                                    "type": "assert",
+                                    "leftType": "expression",
+                                    "left": "$._status",
+                                    "comparator": "is",
+                                    "rightType": "value",
+                                    "right": 200
+                                },
+                                {
+                                    "id": 104,
+                                    "type": "assert",
+                                    "leftType": "expression",
+                                    "left": "$.sessKey",
+                                    "comparator": "not_blank"
+                                },
+                                {
+                                    "id": 105,
+                                    "type": "assert",
+                                    "leftType": "expression",
+                                    "left": "$.sessKey",
+                                    "comparator": "is_a",
+                                    "rightType": "value",
+                                    "right": "string"
+                                },
+                                {
+                                    "id": 106,
+                                    "type": "assert",
+                                    "leftType": "expression",
+                                    "left": "$.user",
+                                    "comparator": "not_blank"
+                                },
+                                {
+                                    "id": 107,
+                                    "type": "assert",
+                                    "leftType": "expression",
+                                    "left": "$.somethingrandom",
+                                    "comparator": "is_blank",
+                                    "right": ""
+                                }
+                            ]
+                        },
+                        {
+                            "id": 4,
+                            "type": "test",
+                            "name": "Login",
+                            "children": [
+
+                            ],
+                            "actions": [
+
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 5,
+                    "type": "group",
+                    "name": "Bug Tests",
+                    "children": [
+                        {
+                            "id": 6,
+                            "type": "test",
+                            "name": "SOCAPI-19",
+                            "children": [
+
+                            ],
+                            "actions": [
+
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
