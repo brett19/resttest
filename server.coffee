@@ -17,12 +17,32 @@ app.use express.errorHandler({
 
 fData =
   autoincrement: 1
+  version: 1
   items: []
+lastSaveVer = -1
+
+backupData = (done) ->
+  if fData.version isnt lastSaveVer
+    lastSaveVer = fData.version
+    curTime = (new Date()).getTime()
+    fileName = "backups/bak#{curTime}.json"
+    fs.writeFile fileName, JSON.stringify(fData), ->
+      if done then done()
+  else
+    done()
+
+autoBackup = () ->
+  return #Disabled
+  backupData () ->
+    setTimeout autoBackup, 1000
+
 saveData = (done) ->
+  fData.version++
   
 loadData = (done) ->
   fs.readFile 'data.json', (err,data) ->
     fData = JSON.parse data
+    if not fData.version then fData.version = 1
     done()
   
 getNextId = (done) ->
@@ -67,10 +87,6 @@ app.post '/api/newgroup', (req,res,next) ->
     if err then return next err
     getNextId (err, newId) ->
       if err then return next err
-      
-      console.log obj
-      console.log newId
-      
       newItem = 
         id: newId
         type: 'group'
@@ -87,10 +103,6 @@ app.post '/api/newtest', (req,res,next) ->
     if err then return next err
     getNextId (err, newId) ->
       if err then return next err
-      
-      console.log obj
-      console.log newId
-      
       newItem = 
         id: newId
         type: 'test'
@@ -100,9 +112,60 @@ app.post '/api/newtest', (req,res,next) ->
       obj.children.push newItem
       res.send fData.items
     
+app.post '/api/newaction', (req,res,next) ->
+  itemId = parseInt(req.body.itemId)
+  
+  findById itemId, (err, obj, parent) ->
+    if err then return next err
+    
+    getNextId (err, newId) ->
+      if err then return next err
+      
+      newAction = req.body.data
+      newAction.id = newId
+      obj.actions.push newAction
+      
+      res.send fData.items
+  
+app.post '/api/updateaction', (req,res,next) ->
+  id = parseInt(req.body.id)
+  itemId = parseInt(req.body.itemId)
+  
+  findById itemId, (err, obj, parent) ->
+    if err then return next err
+ 
+    newAction = req.body.data
+    newAction.id = id
+    
+    newActions = []
+    for action in obj.actions
+      if action.id is id
+        newActions.push newAction
+      else
+        newActions.push action
+    obj.actions = newActions
+    
+    res.send fData.items
+  
+app.post '/api/delaction', (req,res,next) ->
+  id = parseInt(req.body.id)
+  itemId = parseInt(req.body.itemId)
+  
+  findById itemId, (err, obj, parent) ->
+    if err then return next err
+    
+    newActions = []
+    for action in obj.actions
+      if action.id isnt id
+        newActions.push action
+    obj.actions = newActions
+    
+    res.send fData.items
+    
 console.log "Loading Data"
 loadData () ->
   console.log "Done."
+  autoBackup()
   app.listen(8080)
   console.log "Express server listening"
 

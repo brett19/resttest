@@ -50,7 +50,7 @@
                                     "type": "assert",
                                     "leftType": "expression",
                                     "left": "$._status",
-                                    "comparator": "is",
+                                    "comparator": "equal",
                                     "rightType": "value",
                                     "right": 200
                                 },

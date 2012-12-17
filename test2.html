@@ -6,16 +6,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>REST Test: JSON</title>
     <link href="css/ui-lightness/jquery-ui-1.9.2.custom.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/arta.min.css">
     <link href="css/test2.css" rel="stylesheet">
     <script src="js/jquery-1.8.3.js"></script>
     <script src="js/jquery-ui-1.9.2.custom.min.js"></script>
+    <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
     <script type="text/javascript" src="js/test2.js"></script>
     <meta name="author" content="root" />
   </head>
   <body>
     <table cellspacing="0" cellpadding="0" id="wrapper">
       <tr>
-        <td id="nav">
+        <td id="nav"><div class="panewrapper">
           <div id="topbar">
             <div id="refresh" class="refresh ui-icon ui-icon-refresh">Refresh</div>
             <img src="img/logo.png" width="130" height="27" />
@@ -31,72 +33,145 @@
           
           <ul id="itemlist">
           </ul>
-          
-          <!--
-          <ul id="itemlist">
-            <li class="item group">
-              <label>
-                <div class="ui-icon ui-icon-play"></div>
-                <div class="ui-icon ui-icon-plusthick"></div>
-                <div class="ui-icon ui-icon-folder-collapsed"></div>
-                <span>SocialAPI</span>
-              </label>
-              <ul>
-                <li class="item group">
-                  <label>
-                    <div class="ui-icon ui-icon-play">Run</div>
-                    <div class="ui-icon ui-icon-plusthick">New Test</div>
-                    <div class="ui-icon ui-icon-folder-collapsed">New Group</div>
-                    <div class="ui-icon ui-icon-trash">Delete</div>
-                    <span>Base Tests</span>
-                  </label>
-                  <ul>
-                    <li class="item test">
-                      <label>
-                        <div class="ui-icon ui-icon-play">Run</div>
-                        <div class="ui-icon ui-icon-plusthick">New Test</div>
-                        <div class="ui-icon ui-icon-folder-collapsed">New Group</div>
-                        <div class="ui-icon ui-icon-trash">Delete</div>
-                        <span>Create Account</span>
-                    </label>
-                    </li>
-                    <li class="item test">
-                      <label>
-                        <div class="ui-icon ui-icon-play">Run</div>
-                        <div class="ui-icon ui-icon-plusthick">New Test</div>
-                        <div class="ui-icon ui-icon-folder-collapsed">New Group</div>
-                        <div class="ui-icon ui-icon-trash">Delete</div>
-                        <span>Login</span>
-                      </label>
-                    </li>
-                  </ul>
-                </li>
-                <li class="item group">
-                    <label>
-                      <div class="ui-icon ui-icon-play">Run</div>
-                      <div class="ui-icon ui-icon-plusthick">New Test</div>
-                      <div class="ui-icon ui-icon-folder-collapsed">New Group</div>
-                      <div class="ui-icon ui-icon-trash">Delete</div>
-                      <span>Bug Tests</span>
-                    </label>
-                  <ul>
-                    <li class="item test">
-                      <label>
-                        <div class="ui-icon ui-icon-play">Run</div>
-                        <div class="ui-icon ui-icon-plusthick">New Test</div>
-                        <div class="ui-icon ui-icon-folder-collapsed">New Group</div>
-                        <div class="ui-icon ui-icon-trash">Delete</div>
-                        <span>SOCAPI-19</span>
-                      </label>
-                    </li>
-                  </ul>
-                </li>
-              </ul>
-            </li>
-          </ul>
-          -->
-        </td>
-        <td>
+        </div></td>
+        <td id="editpane" class="notestsel">
+        	<div id="editor">
+        		<table cellspacing="0" cellpadding="0">
+        			<tr>
+        				<td id="actpane"><div class="panewrapper">
+        					<div id="acttitle">Editing: <span class="title">-</span></div>
+        					<ul id="actlist">
+        						<li class="action store-action">
+        							<div class="marker ui-icon ui-icon-arrowthick-1-e"></div>
+        							<span class="type">STORE</span>
+        							<label>#gameKey1 <span class="op">=</span> "356a192b7913b04c54574d18c28d46e6395428ab"</label>
+        							<div class="tools">
+        								<button class="btn editbtn ui-icon ui-icon-pencil">Edit</button>
+        								<button class="btn deletebtn ui-icon ui-icon-trash">Delete</button>
+        							</div>
+        						</li>
+        					</ul>
+        					<button class="newaction ui-icon ui-icon-document-b">New Action</button>
+        					<div id="editactiondlg">
+        					  <form>
+        					    <fieldset>
+        					      <label for="actionType">Action Type</label>
+        					      <select id="actionType">
+        					        <option value="store">Store</option>
+        					        <option value="rest">Request</option>
+        					        <option value="assert">Assert</option>
+        					        <option value="parent">Parent</option>
+        					        <option value="code">Code</option>
+        					      </select>
+        					      <br />
+        					      <br />
+        					      
+        					      <div id="actionDynOpts">
+                          <label class="usedby-rest">Method</label>
+                          <select id="actionMethod" class="usedby-rest">
+                            <option>GET</option>
+                            <option>POST</option>
+                            <option>PUT</option>
+                            <option>PATCH</option>
+                            <option>DELETE</option>
+                            <option>HEAD</option>
+                            <option>OPTIONS</option>
+                          </select>
+                          
+                          <label class="usedby-rest">URI</label>
+                          <input type="text" id="uri" class="usedby-rest">
+                          
+                          <label class="usedby-rest">Headers</label>
+                          <textarea id="headers" class="usedby-rest"></textarea>
+                          
+                          <label class="usedby-rest">Body</label>
+                          <textarea id="body" class="usedby-rest"></textarea>
+                          
+                          <label class="usedby-store">SET</label>
+                          <label class="usedby-assert">ENSURE</label>
+                          <select id="leftType" class="usedby-store usedby-assert">
+                            <option value="variable">Variable</option>
+                            <option value="expression">Expression</option>
+                            <option value="value">Constant</option>
+                            <option value="func_randomEmail">Random Email</option>
+                            <option value="func_randomFbId">Random Facebook ID</option>
+                            <option value="func_randomGcId">Random Gamecenter ID</option>
+                            <option value="func_randomUsername">Random Username</option>
+                          </select>
+                          <input type="text" class="text usedby-store usedby-assert" id="actionLeftVal" />
+  
+                          <label class="usedby-assert">IS</label>
+                          <select id="cmpType" class="usedby-assert">
+                            <option value="not_blank">Not Blank</option>
+                            <option value="is_blank">Blank</option>
+                            <option value="equal">Equal</option>
+                            <option value="not_equal">Not Equal</option>
+                            <option value="greater">Greater</option>
+                            <option value="lesser">Lesser</option>
+                            <option value="greater_equal">Greater or Equal</option>
+                            <option value="lesser_equal">Lesser or Equal</option>
+                          </select>
+  
+                          <label class="usedby-store usedby-assert cmpHasRight">TO</label>
+                          <select id="rightType" class="usedby-store usedby-assert cmpHasRight">
+                            <option value="variable">Variable</option>
+                            <option value="expression">Expression</option>
+                            <option value="value">Constant</option>
+                            <option value="func_randomEmail">Random Email</option>
+                            <option value="func_randomFbId">Random Facebook ID</option>
+                            <option value="func_randomGcId">Random Gamecenter ID</option>
+                            <option value="func_randomUsername">Random Username</option>
+                          </select>
+                          <input type="text" class="text usedby-store usedby-assert cmpHasRight" id="actionRightVal" />
+        					      </div>
+
+        					    </fieldset>
+        					  </form>
+        					</div>
+        				</div></td>
+        				<td id="dbgpane"><div class="panewrapper">
+        					<h2>Debug Information</h2>
+                  <div class="varlistwrap">
+                    <span id="actionbar" class="actionbar ui-widget-header ui-corner-all">
+                      <button class="begindbg">Begin Debugging</button>
+                      <button class="step" disabled="disabled">Step One Action</button>
+                      <button class="restart" disabled="disabled">Restart</button>
+                    </span>
+                    
+                    <div class="title">Stored Variables: </div>
+                    <ul class="varlist">
+                    </ul>
+                    <br>
+                    <div class="title">Last Assertion Result: </div>
+                    <pre><code class="assertres"></code></pre>
+                    <br>
+                    <div class="title">Last Request Method: </div>
+                    <pre><code class="reqmethod"></code></pre>
+                    <br>
+                    <div class="title">Last Request URI: </div>
+                    <pre><code class="requri"></code></pre>
+                    <br>
+                    <div class="title">Last Request Headers: </div>
+                    <pre><code class="json reqheaders"></code></pre>
+                    <br>
+                    <div class="title">Last Request Body: </div>
+                    <pre><code class="json reqbody"></code></pre>
+                    <br>
+                    <div class="title">Last Response Status:</div>
+                    <pre><code class="respstatus"></code></pre>
+                    <br>
+                    <div class="title">Last Response Headers: </div>
+                    <pre><code class="json respheaders"></code></pre>
+                    <br>
+                    <div class="title">Last Response Body: </div>
+                    <pre><code class="json respbody"></code></pre>
+                  </div>
+        				</div></td>
+        			</tr>
+        			
+        		</table>
+        	</div>
+        	<div id="noeditor">Please select a test to edit on the left...</div>
         </td>
       </tr>
     </table>

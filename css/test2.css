@@ -8,73 +8,314 @@ body {
   font-family: Tahoma;
   font-size: 11px;
 }
+
 #wrapper {
   width: 100%;
   height: 100%;
 }
-#wrapper td:first-child {
+#wrapper #nav {
   width: 16%;
   min-width: 190px;
   background: -webkit-linear-gradient(rgba(234, 238, 243, 0.2), #EAEAEA), -webkit-linear-gradient(left, #EAEAEA, #EAEAEA 97%, #DDD);
 }
 #wrapper td {
-  padding: 6px;
   overflow-y: auto;
   vertical-align: top;
 }
 
-#wrapper ul {
+#nav ul {
   list-style-type: none;
   margin: 0px;
   padding: 0px;
 }
 
-#wrapper ul li ul {
+#nav ul li ul {
   padding: 0px 0px 0px 8px;
 }
 
-#wrapper ul li {
+#nav ul li {
   clear: both;
 }
-#wrapper ul > li > label {
+#nav ul > li > label {
   display: block;
   width: 100%;
-  cursor: pointer;
 }
-#wrapper ul label:hover {
+#nav ul label:hover {
   background-color: #dddddd;
   border-radius: 4px;
 }
-#wrapper ul li.item div {
+#nav ul li.item div {
   float: right;
 }
-#wrapper ul li.item span {
+#nav ul li.item span {
   display: block;
   padding: 2px 8px;
 }
-#wrapper ul > li.group > label {
+#nav ul > li.group > label {
   font-weight: bold;
 }
-#wrapper ul > li.test > label {
+#nav ul > li.test > label {
   text-decoration: underline;
+  cursor: pointer;
 }
 
-#wrapper #nav #topbar {
+#nav {
+	padding: 6px;
+}
+
+#nav #topbar {
   height: 27px;
   padding: 0px 0px 3px 0px;
   margin: 0px 0px 10px 0px;
   border-bottom: 1px dashed #999999;
 }
-#wrapper #nav .refresh {
+#nav .refresh {
   float: right;
   position: relative;
   top: 8px;
   text-decoration: underline;
 }
 
-#wrapper #nav #itemlist_load {
+#nav #itemlist_load {
   width: 100%;
   padding: 10px 0px 0px 0px;
   text-align: center;
   color: #333333;
 }
+
+
+
+#editpane #editor {	
+}
+#editpane #noeditor {
+	display: none;
+}
+
+.notestsel {
+	background-color: #fafafa;
+	text-align: center;
+	vertical-align: middle !important;
+	width: 100%;
+	height: 100%;
+}
+.notestsel #editor {
+	display: none;
+}
+.notestsel #noeditor {
+	padding: 6px;
+	display: block !important;
+}
+
+#editor {
+	height: 100%;
+}
+
+#editor > table {
+	width: 100%;
+	height: 100%;
+	padding: 0px;
+	margin: 0px;
+}
+
+#actpane .panewrapper {
+  overflow: auto;
+  padding: 6px;
+  height: 100%;
+}
+#actpane {
+	width: 70%;
+}
+#dbgpane .panewrapper {
+  overflow: auto;
+  padding: 6px;
+  height: 100%;
+  background: -webkit-linear-gradient(rgba(234, 238, 243, 0.2), #EAEAEA), -webkit-linear-gradient(right, #EAEAEA, #EAEAEA 97%, #DDD);
+}
+#dbgpane {
+	width: 30%;
+}
+#dbgpane .actionbar {
+  display: block;
+  margin: 0px 0px 12px 0px;
+}
+
+
+#acttitle {
+	font-size: 18px;
+	text-decoration: underline;
+}
+
+#actlist {
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+}
+
+
+#actlist .action {
+    position: relative;
+    border-radius: 4px;
+    border: 1px solid #cccccc;
+    background: -webkit-linear-gradient(rgba(234, 238, 243, 0.2), #EAEAEA), -webkit-linear-gradient(bottom, #EAEAEA, #EAEAEA 97%, #DDD);
+    margin: 5px 50px 5px 24px;
+    padding: 6px 12px 6px 6px;
+}
+
+#actlist .action .marker {
+	position: absolute;
+	left: -22px;
+	top: 5px;
+	width: 18px;
+	height: 18px;
+}
+
+#actlist .action > .type {
+    margin: 0px 5px 0px 0px;
+    padding: 1px 4px 2px 3px;
+    font-size: 9.75px;
+    font-weight: bold;
+    color: white;
+    text-transform: uppercase;
+    background-color: #999;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+#actlist .request-action > .type {
+	background-color: #4DAB58;
+}
+#actlist .store-action > .type {
+	background-color: #3366FF;
+}
+#actlist .assert-action > .type {
+	background-color: #CC9900;
+}
+#actlist .code-action > .type {
+	background-color: #C30;
+}
+#actlist .parent-action > .type {
+}
+
+
+#actlist .action > label {
+	display: inline;
+	font-family: Courier New, Courier New, monospace;
+	font-size: 12px;
+
+}
+
+#actlist .action > label .op {
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	background-color: #BBB;
+	font-size: 9.75px;
+	font-weight: bold;
+	padding: 1px 4px 2px 3px;
+	font-family: Helvetica, Arial, sans-serif;
+}
+
+#actlist .action > label .req-method {
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	background-color: #BBB;
+	font-size: 9.75px;
+	font-weight: bold;
+	padding: 1px 4px 2px 3px;
+	font-family: Helvetica, Arial, sans-serif;
+}
+
+#actlist .action .tools {
+	position: absolute;
+	right: -48px;
+	top: 5px;
+}
+
+#actlist .action .tools .btn {
+	width: 18px;
+	height: 18px;
+	margin: 0px 0px 0px 5px;
+}
+
+#actlist .action h5 {
+	padding: 4px 6px;
+	margin: 0px;
+	color: white;
+	font-weight: normal;
+	float: right;
+	text-decoration: underline;
+}
+#actlist .action pre {
+	margin: 8px 0px 0px 0px;
+	padding: 0px;
+}
+#actlist .action pre code {
+	min-height: 8px;
+}
+#actpane .newaction {
+  margin: 8px 0px 0px 24px;
+  width: 18px;
+  height: 18px;
+}
+
+#editactiondlg fieldset {
+  padding:0px;
+  border:0px;
+  margin-top:10px;
+}
+#editactiondlg fieldset label {
+  display: block;
+  margin: 6px 0px;
+}
+
+#editactiondlg select#actionType {
+  width: 100%;
+}
+
+#editactiondlg input {
+  width: 360px;
+}
+
+#editactiondlg input#uri {
+  width: 100%;
+}
+
+#editactiondlg textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+#editactiondlg textarea#headers {
+  height: 38px;
+}
+
+#editactiondlg textarea#body {
+  height: 220px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
