@@ -1,6 +1,8 @@
 connect = require 'connect'
 express = require 'express'
+request = require 'request'
 fs = require 'fs'
+http = require 'http'
 
 app = module.exports = express()
 
@@ -32,12 +34,13 @@ backupData = (done) ->
     done()
 
 autoBackup = () ->
-  return #Disabled
   backupData () ->
     setTimeout autoBackup, 1000
 
 saveData = (done) ->
   fData.version++
+  fs.writeFile 'data.json', JSON.stringify(fData,null,'  '), (err) ->
+    if done then done()
   
 loadData = (done) ->
   fs.readFile 'data.json', (err,data) ->
@@ -77,6 +80,7 @@ app.post '/api/delitem', (req,res,next) ->
         newChildren.push item
     parent.children = newChildren
     
+    saveData()
     res.send fData.items
   
 app.post '/api/newgroup', (req,res,next) ->
@@ -93,6 +97,8 @@ app.post '/api/newgroup', (req,res,next) ->
         name: name
         children: []
       obj.children.push newItem
+      
+      saveData()
       res.send fData.items
     
 app.post '/api/newtest', (req,res,next) ->
@@ -110,6 +116,8 @@ app.post '/api/newtest', (req,res,next) ->
         children: []
         actions: []
       obj.children.push newItem
+      
+      saveData()
       res.send fData.items
     
 app.post '/api/newaction', (req,res,next) ->
@@ -125,7 +133,36 @@ app.post '/api/newaction', (req,res,next) ->
       newAction.id = newId
       obj.actions.push newAction
       
+      saveData()
       res.send fData.items
+  
+app.post '/api/moveaction', (req,res,next) ->
+  id = parseInt(req.body.id)
+  afterId = parseInt(req.body.afterId)
+  itemId = parseInt(req.body.itemId)
+  
+  findById itemId, (err, obj, parent) ->
+    if err then return next err
+    
+    foundAction = null
+    for action in obj.actions
+      if action.id is id
+        foundAction = action
+    foundActionIdx = obj.actions.indexOf(foundAction)
+    
+    movedActions = obj.actions.splice(foundActionIdx,1)
+    
+    #if the item isnt found here, indexOf returns -1, which is +1'd to 0 which is a valid splice location
+    foundActionAfter = null
+    for action in obj.actions
+      if action.id is afterId
+        foundActionAfter = action
+    foundActionAfterIdx = obj.actions.indexOf(foundActionAfter)
+
+    obj.actions.splice foundActionAfterIdx+1, 0, movedActions[0]
+    
+    saveData()
+    res.send fData.items
   
 app.post '/api/updateaction', (req,res,next) ->
   id = parseInt(req.body.id)
@@ -145,6 +182,7 @@ app.post '/api/updateaction', (req,res,next) ->
         newActions.push action
     obj.actions = newActions
     
+    saveData()
     res.send fData.items
   
 app.post '/api/delaction', (req,res,next) ->
@@ -160,7 +198,31 @@ app.post '/api/delaction', (req,res,next) ->
         newActions.push action
     obj.actions = newActions
     
+    saveData()
     res.send fData.items
+    
+app.post '/api/proxy', (req,res,next) ->
+  console.log req.body
+  
+  reqOpts =
+    method: req.body.method
+    uri: req.body.uri
+    headers: req.body.headers
+    body: req.body.body
+  
+  handleResp = (err,resp,data) ->
+    respObj =
+      reqMethod: reqOpts.method
+      reqUri: reqOpts.uri
+      reqHeaders: reqOpts.headers
+      reqBody: reqOpts.body
+      respStatus: resp.statusCode
+      respStatusText: http.STATUS_CODES[resp.statusCode]
+      respHeaders: resp.headers
+      respBody: data
+    console.log respObj
+    res.send respObj
+  request reqOpts, handleResp
     
 console.log "Loading Data"
 loadData () ->

@@ -132,11 +132,16 @@ body {
   background: -webkit-linear-gradient(rgba(234, 238, 243, 0.2), #EAEAEA), -webkit-linear-gradient(right, #EAEAEA, #EAEAEA 97%, #DDD);
 }
 #dbgpane {
-	width: 30%;
+	width: 300px;
+	max-width: 300px;
 }
 #dbgpane .actionbar {
   display: block;
   margin: 0px 0px 12px 0px;
+}
+#dbgpane code {
+  word-wrap: break-word;
+
 }
 
 
@@ -181,6 +186,7 @@ body {
     -moz-border-radius: 3px;
     border-radius: 3px;
     font-family: Helvetica, Arial, sans-serif;
+    cursor: pointer;
 }
 
 #actlist .request-action > .type {

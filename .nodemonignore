@@ -1,4 +1,6 @@
 /css/*
 /img/*
 /js/*
+/backups/*
 *.html
+data.json
