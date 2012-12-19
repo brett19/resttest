@@ -14,7 +14,7 @@ body {
   height: 100%;
 }
 #wrapper #nav {
-  width: 16%;
+  width: 20%;
   min-width: 190px;
   background: -webkit-linear-gradient(rgba(234, 238, 243, 0.2), #EAEAEA), -webkit-linear-gradient(left, #EAEAEA, #EAEAEA 97%, #DDD);
 }
@@ -25,9 +25,9 @@ body {
 
 #header {
   height: 27px;
-  padding: 6px 6px 3px 6px;
+  padding: 5px 6px 5px 6px;
   margin: 0px 0px 10px 0px;
-  background: -webkit-linear-gradient(top, #EAEAEA, #EAEAEA 80%, #DDD);
+  background: -webkit-linear-gradient(top,#444,#111);
 }
 
 .panewrapper h3 {
@@ -340,7 +340,7 @@ body {
 }
 
 #testrun .resokay {
-  olor: #00cc00;
+  color: #00cc00;
   margin: 0px 0px 8px 0px;
 }
 
