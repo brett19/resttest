@@ -8,22 +8,28 @@
     <link href="css/ui-lightness/jquery-ui-1.9.2.custom.min.css" rel="stylesheet">
     <link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/arta.min.css">
     <link href="css/test2.css" rel="stylesheet">
-    <script src="js/jquery-1.8.3.js"></script>
-    <script src="js/jquery-ui-1.9.2.custom.min.js"></script>
-    <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
-    <script src="js/jsonpath-0.8.0.js"></script>
+    <script type="text/javascript" src="js/jquery-1.8.3.js"></script>
+    <script type="text/javascript" src="js/jquery-ui-1.9.2.custom.min.js"></script>
+    <script type="text/javascript" src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+    <script type="text/javascript" src="js/jsonpath-0.8.0.js"></script>
+    <script type="text/javascript" src="js/test2.coffee.js"></script>
     <script type="text/javascript" src="js/test2.js"></script>
     <meta name="author" content="root" />
   </head>
   <body>
     <table cellspacing="0" cellpadding="0" id="wrapper">
       <tr>
+        <td colspan="2" id="header">
+          <img src="img/logo.png" width="130" height="27" />
+        </td>
+      </tr>
+      <tr>
+        
         <td id="nav"><div class="panewrapper">
           <div id="topbar">
             <div id="refresh" class="refresh ui-icon ui-icon-refresh">Refresh</div>
-            <img src="img/logo.png" width="130" height="27" />
+            <h3>Navigation</h3>
           </div>
-          
           <div id="itemlist_load">
             <br />
             <img src="img/loading.gif" />
@@ -40,7 +46,7 @@
         		<table cellspacing="0" cellpadding="0">
         			<tr>
         				<td id="actpane"><div class="panewrapper">
-        					<div id="acttitle">Editing: <span class="title">-</span></div>
+        					<div id="acttitle"><span class="title">-</span></div>
         					<ul id="actlist">
         						<li class="action store-action">
         							<div class="marker ui-icon ui-icon-arrowthick-1-e"></div>
@@ -131,7 +137,7 @@
         					</div>
         				</div></td>
         				<td id="dbgpane"><div class="panewrapper">
-        					<h2>Debug Information</h2>
+        					<h3>Debug Information</h3>
                   <div class="varlistwrap">
                     <span id="actionbar" class="actionbar ui-widget-header ui-corner-all">
                       <button class="begindbg">Begin Debugging</button>
@@ -143,7 +149,7 @@
                     <ul class="varlist">
                     </ul>
                     <br>
-                    <div class="title">Last Assertion Result: </div>
+                    <div class="title">Last Error: </div>
                     <pre><code class="assertres"></code></pre>
                     <br>
                     <div class="title">Last Request Method: </div>

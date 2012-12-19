@@ -3,6 +3,7 @@ express = require 'express'
 request = require 'request'
 fs = require 'fs'
 http = require 'http'
+coffeescript = require 'coffee-script'
 
 app = module.exports = express()
 
@@ -211,19 +212,30 @@ app.post '/api/proxy', (req,res,next) ->
     body: req.body.body
   
   handleResp = (err,resp,data) ->
-    respObj =
-      reqMethod: reqOpts.method
-      reqUri: reqOpts.uri
-      reqHeaders: reqOpts.headers
-      reqBody: reqOpts.body
-      respStatus: resp.statusCode
-      respStatusText: http.STATUS_CODES[resp.statusCode]
-      respHeaders: resp.headers
-      respBody: data
+    if err
+      respObj =
+        status: 'error'
+        message: err.message
+    else
+      respObj =
+        status: 'ok'
+        reqMethod: reqOpts.method
+        reqUri: reqOpts.uri
+        reqHeaders: reqOpts.headers
+        reqBody: reqOpts.body
+        respStatus: resp.statusCode
+        respStatusText: http.STATUS_CODES[resp.statusCode]
+        respHeaders: resp.headers
+        respBody: data
     console.log respObj
     res.send respObj
   request reqOpts, handleResp
-    
+
+app.get "/js/:fileName.coffee.js", (req,res,next) ->
+  fs.readFile ('coffee/'+req.params.fileName+".coffee"), "ascii", (err,data) ->
+    if err then return next err
+    res.send coffeescript.compile(data)
+
 console.log "Loading Data"
 loadData () ->
   console.log "Done."

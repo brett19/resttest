@@ -1,5 +1,5 @@
 {
-  "autoincrement": 1017,
+  "autoincrement": 1028,
   "items": [
     {
       "id": 1,
@@ -17,10 +17,6 @@
               "name": "Create Account",
               "children": [],
               "actions": [
-                {
-                  "type": "parent",
-                  "id": 1005
-                },
                 {
                   "id": 100,
                   "type": "store",
@@ -46,15 +42,15 @@
                   "right": "ThisIsATestSessionToken"
                 },
                 {
-                  "id": 102,
                   "type": "rest",
                   "method": "POST",
-                  "uri": "/game/#gameKey1/session",
+                  "uri": "#url/game/#gameKey1/session",
                   "headers": {
                     "Content-Type": "application/json",
                     "Authorization": "Bearer #sessToken"
                   },
-                  "body": "{\r\n      \"email\": \"#testEmail\",\r\n      \"pswd\": \"password\",\r\n      \"device\": {\r\n          \"deviceId\": \"01-02-03-04-05-06\",\r\n          \"manufacturer\": \"Samsung\",\r\n          \"hwType\": \"Galaxy Nexus\",\r\n          \"osType\": \"Android\",\r\n          \"osVersion\": \"4.2.1\"\r\n      }\r\n}"
+                  "body": "{\n      \"email\": \"#testEmail\",\n      \"pswd\": \"password\",\n      \"device\": {\n          \"deviceId\": \"01-02-03-04-05-06\",\n          \"manufacturer\": \"Samsung\",\n          \"hwType\": \"Galaxy Nexus\",\n          \"osType\": \"Android\",\n          \"osVersion\": \"4.2.1\"\n      }\n}",
+                  "id": 102
                 },
                 {
                   "id": 103,
@@ -117,8 +113,8 @@
                       "type": "store",
                       "leftType": "variable",
                       "left": "testVar2",
-                      "rightType": "variable",
-                      "right": "\"HELL YEA!\"",
+                      "rightType": "value",
+                      "right": "LUVVERS",
                       "id": 1009
                     }
                   ]
@@ -180,7 +176,7 @@
                 {
                   "type": "rest",
                   "method": "POST",
-                  "uri": "/account",
+                  "uri": "#url/account",
                   "headers": {
                     "Content-Type": "application/json"
                   },
@@ -188,14 +184,77 @@
                   "id": 1013
                 },
                 {
+                  "type": "assert",
+                  "leftType": "expression",
+                  "left": "$._status",
+                  "comparator": "equal",
+                  "rightType": "value",
+                  "right": 200,
+                  "id": 1020
+                },
+                {
+                  "type": "assert",
+                  "leftType": "expression",
+                  "left": "$.lang",
+                  "comparator": "equal",
+                  "rightType": "value",
+                  "right": "en",
+                  "id": 1021
+                },
+                {
+                  "type": "assert",
+                  "leftType": "expression",
+                  "left": "$.email",
+                  "comparator": "equal",
+                  "rightType": "variable",
+                  "right": "testEmail",
+                  "id": 1019
+                },
+                {
                   "type": "rest",
                   "method": "POST",
-                  "uri": "/game/da4b9237bacccdf19c0760cab7aec4a8359010b0/session",
+                  "uri": "#url/game/da4b9237bacccdf19c0760cab7aec4a8359010b0/session",
                   "headers": {
                     "Content-Type": "application/json"
                   },
                   "body": "{\n  \"email\": \"#testEmail\",\n  \"pswd\": \"password\"\n}",
                   "id": 1014
+                },
+                {
+                  "type": "assert",
+                  "leftType": "expression",
+                  "left": "$._status",
+                  "comparator": "equal",
+                  "rightType": "value",
+                  "right": 200,
+                  "id": 1024
+                },
+                {
+                  "type": "assert",
+                  "leftType": "expression",
+                  "left": "$.sessKey",
+                  "comparator": "not_blank",
+                  "rightType": "variable",
+                  "right": "",
+                  "id": 1025
+                },
+                {
+                  "type": "assert",
+                  "leftType": "expression",
+                  "left": "$.user",
+                  "comparator": "not_blank",
+                  "rightType": "variable",
+                  "right": "",
+                  "id": 1026
+                },
+                {
+                  "type": "assert",
+                  "leftType": "expression",
+                  "left": "$.user.devices",
+                  "comparator": "not_blank",
+                  "rightType": "variable",
+                  "right": "",
+                  "id": 1027
                 },
                 {
                   "type": "store",
@@ -208,7 +267,7 @@
                 {
                   "type": "rest",
                   "method": "GET",
-                  "uri": "/game/da4b9237bacccdf19c0760cab7aec4a8359010b0/gifts",
+                  "uri": "#url/game/da4b9237bacccdf19c0760cab7aec4a8359010b0/gifts",
                   "headers": {
                     "Content-Type": "application/json",
                     "Authorization": "Bearer #testSessKey"
@@ -223,5 +282,5 @@
       ]
     }
   ],
-  "version": 18
+  "version": 50
 }

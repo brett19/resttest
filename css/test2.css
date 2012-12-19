@@ -23,6 +23,20 @@ body {
   vertical-align: top;
 }
 
+#header {
+  height: 27px;
+  padding: 6px 6px 3px 6px;
+  margin: 0px 0px 10px 0px;
+  background: -webkit-linear-gradient(top, #EAEAEA, #EAEAEA 80%, #DDD);
+}
+
+.panewrapper h3 {
+  padding: 0px 0px 6px 0px;
+  margin: 0px 0px 6px 0px;
+  font-size: 13px;
+  border-bottom: 1px dashed #999999;
+}
+
 #nav ul {
   list-style-type: none;
   margin: 0px;
@@ -63,16 +77,9 @@ body {
 	padding: 6px;
 }
 
-#nav #topbar {
-  height: 27px;
-  padding: 0px 0px 3px 0px;
-  margin: 0px 0px 10px 0px;
-  border-bottom: 1px dashed #999999;
-}
 #nav .refresh {
   float: right;
   position: relative;
-  top: 8px;
   text-decoration: underline;
 }
 
@@ -140,14 +147,17 @@ body {
   margin: 0px 0px 12px 0px;
 }
 #dbgpane code {
+  white-space: pre-wrap;
+}
+#dbgpane .requri code {
   word-wrap: break-word;
-
 }
 
 
 #acttitle {
-	font-size: 18px;
-	text-decoration: underline;
+	font-size: 16px;
+	font-weight: bold;
+	margin: 6px 6px 14px 6px;
 }
 
 #actlist {
@@ -164,6 +174,11 @@ body {
     background: -webkit-linear-gradient(rgba(234, 238, 243, 0.2), #EAEAEA), -webkit-linear-gradient(bottom, #EAEAEA, #EAEAEA 97%, #DDD);
     margin: 5px 50px 5px 24px;
     padding: 6px 12px 6px 6px;
+}
+
+#actlist .action.highlight {
+  border: 1px solid #CC0000;
+  background: -webkit-linear-gradient(rgba(234, 144, 144, 0.2), #EA9090), -webkit-linear-gradient(bottom, #EA9090, #EA9090 97%, #DDD);
 }
 
 #actlist .action .marker {

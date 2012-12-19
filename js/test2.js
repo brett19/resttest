@@ -2,80 +2,74 @@ function capString( str ) {
   return str.replace(/^(.)|(\s|\-)(.)/g, function(x){return x.toUpperCase();})
 }
 
+function randomString( ) {
+  return (new Date()).getTime().toString() + Math.round(Math.random()*999).toString();
+}
+
 function randomEmail( ) {
-  return "rndem" + ((new Date()).getTime()) + (Math.round(Math.random()*999)) + "@gogiitest.com";
+  return "rndem" + randomString() + "@gogiitest.com";
 }
 function randomGcId( ) {
-  return "rndgc" + ((new Date()).getTime()) + (Math.round(Math.random()*999));
+  return "rndgc" + randomString();
 }
 function randomFbId( ) {
-  return "rndfb" + ((new Date()).getTime()) + (Math.round(Math.random()*999));
+  return "rndfb" + randomString();
 }
 function randomUsername( ) {
-  return "rndun" + ((new Date()).getTime()) + (Math.round(Math.random()*999));
+  return "rndun" + randomString();
 }
 
+var functionList = {
+  "randomString": randomString,
+  "randomEmail": randomEmail,
+  "randomGcId": randomGcId,
+  "randomFbId": randomFbId,
+  "randomUsername": randomUsername
+};
+
+var execContext = null;
 var execState = null;
 
-function _execUpdateMarker( )
+function execValid( )
 {
-  $('#actlist li').find('.marker').removeClass('ui-icon ui-icon-arrowthick-1-e');
-  if( execState ) {
-    $('#actlist li').eq( execState.actIdx ).find('.marker').addClass('ui-icon ui-icon-arrowthick-1-e');
-  }
+  return execState != null;
 }
 
-function evalTV( type, value, obj ) 
+function execActIdx( )
 {
-  if( type == 'variable' ) {
-    return execState.vars[value];
-  } else if( type == 'function' ) {
-    return eval(value+'()');
-  } else if( type == 'value' ) {
-    return value;
-  } else if( type == 'expression') {
-    var exprData = execState.lastRest.exprData;
-    var exprValue = jsonPath(exprData, value);
-    if( exprValue.length < 1 ) {
-      throw new Error('Expression matches no fields');
-    } else if( exprValue.length > 1 ) {
-      throw new Error('Expression matches more than one field');
-    } else {
-      return exprValue[0];
-    }
-  }
+  return execState.actionIdx;
+}
+
+function execMaxAct( )
+{
+  return execState.actions.length;
 }
 
 function beginExec( data )
 {
-  execState = {
-    actIdx: 0,
-    actions: data.actions,
-    vars: {},
-    lastRest: null,
-    lastAssert: null
-  };
-  
-  _execUpdateMarker( );
+  var actStack = [];
+  for( i in data ) {
+    actStack.push(data[i].actions);
+  }
+  console.log(actStack);
+  execContext = new ExecContext();
+  execContext.variables['url'] = 'http://api.archiegameserver.com:3335';
+  execState = new ExecEngine(execContext, actStack);
+}
+
+function resetExec( data )
+{
+  var actStack = [];
+  for( i in data ) {
+    actStack.push(data[i].actions);
+  }
+  execState = new ExecEngine(execContext, actStack);
 }
 
 function stopExec( )
 {
   execState = null;
-  _execUpdateMarker( );
-}
-
-function resetExec( )
-{
-  execState = {
-    actIdx: 0,
-    actions: execState.actions,
-    vars: {},
-    lastRest: null,
-    lastAssert: null
-  };
-  
-  _execUpdateMarker( );
+  execContext = null;
 }
 
 function runExec( done )
@@ -85,148 +79,27 @@ function runExec( done )
 
 function stepExec( done )
 {
-  if( execState.actIdx >= execState.actions ) {
-    return;
-  }
-  
-  var act = execState.actions[execState.actIdx];
   edtBeginProc();
-  _execAction( act, function(err){
-    execState.actIdx++;
-    _execUpdateMarker( );
+  execState.stepOne(function(err){
     edtStopProc();
     done();
   });
 }
 
-function _execAction( act, done )
+function _updateDbgMarker( )
 {
-  if( act.type == 'store' ) {
-    if( act.leftType != 'variable' ) {
-      return done(new Error('Store LeftType isnt variable'));
-    }
-    
-    var data = evalTV( act.rightType, act.right );
-    execState.vars[act.left] = data;
-    done(null);
-  } else if( act.type == 'rest' ) {
-    
-    var reqMethod = act.method;
-    var reqUri = "http://api.archiegameserver.com:3335" + act.uri;
-    var reqHeaders = act.headers;
-    var reqBody = act.body;
-    
-    for( varName in execState.vars ) {
-      var varValue = execState.vars[varName];
-      reqUri = reqUri.replace('#'+varName,varValue);
-      for( headerName in reqHeaders ) {
-        reqHeaders[headerName] = reqHeaders[headerName].replace('#'+varName,varValue);
-      }
-      reqBody = reqBody.replace('#'+varName,varValue);
-    }
-
-    var reqObj = {
-      method: reqMethod,
-      uri: reqUri,
-      headers: reqHeaders,
-      body: reqBody
-    };
-    
-    $.ajax({
-      type: 'POST',
-      url: 'api/proxy',
-      dataType: 'json',
-      processData: false,
-      contentType: 'application/json',
-      data: JSON.stringify(reqObj),
-      success: function(data){
-        console.log(data)
-        execState.lastRest = data;
-        
-        try {
-          // Try to parse as JSON
-          execState.lastRest.respBodyObj = JSON.parse(execState.lastRest.respBody);
-          // Regenerate JSON string for formatting purposes
-          execState.lastRest.respBody = JSON.stringify(execState.lastRest.respBodyObj,null,'  ');
-        } catch( e ) { }
-        
-        execState.lastRest.exprData = $.extend(true, {
-          "_status": execState.lastRest.respStatus,
-          "_headers": execState.lastRest.respHeaders
-        }, execState.lastRest.respBodyObj);
-        done(null);
-      },
-      error: function(){
-        done(new Error("Error contacting request proxy system."));
-      }
-    });
-  } else if( act.type == 'assert' ) {
-    if( !execState.lastRest ) {
-      return done(new Error('Attempted to assert prior to a request.'));
-    }
-
-    execState.lastAssert = null;
-    try {
-      try {
-        leftValue = null;
-        leftValue = evalTV( act.leftType, act.left );
-      }catch(e){}
-      try {
-        rightValue = null;
-        rightValue = evalTV( act.rightType, act.right );
-      }catch(e){}
-      
-      if( act.comparator == 'is_blank' ) {
-        if( leftValue ) {
-          throw new Error('Assertion Failed');
-        }
-      } else if( act.comparator == 'not_blank' ) {
-        if( !leftValue ) {
-          throw new Error('Assertion Failed');
-        }
-      } else if( act.comparator == 'equal' ) {
-        if( leftValue != rightValue ) {
-          throw new Error('Assertion Failed');
-        }
-      } else if( act.comparator == 'not_equal' ) {
-        if( leftValue == rightValue ) {
-          throw new Error('Assertion Failed');
-        }
-      } else if( act.comparator == 'greater' ) {
-        if( leftValue <= rightValue ) {
-          throw new Error('Assertion Failed');
-        }
-      } else if( act.comparator == 'lesser' ) {
-        if( leftValue >= rightValue ) {
-          throw new Error('Assertion Failed');
-        }
-      } else if( act.comparator == 'greater_equal' ) {
-        if( leftValue < rightValue ) {
-          throw new Error('Assertion Failed');
-        }
-      } else if( act.comparator == 'lesser_equal' ) {
-        if( leftValue > rightValue ) {
-          throw new Error('Assertion Failed');
-        }
-      } else if( act.comparator == 'is_a' ) {
-        if( typeof(leftValue) != rightValue ) {
-          throw new Error('Assertion Failed');
-        }
-      }
-    } catch( error ) {
-      execState.lastAssert = error.toString();
-    }
-
-    done(null);
-  } else {
-    done(new Error('Unknown Action Type'));
+  $('#actlist li').find('.marker').removeClass('ui-icon ui-icon-arrowthick-1-e');
+  if( execValid() ) {
+    $('#actlist li').eq( execActIdx() ).find('.marker').addClass('ui-icon ui-icon-arrowthick-1-e');
   }
 }
 
 function updateEdtDebug( )
 {
+  _updateDbgMarker();
+  
   $('#dbgpane .varlist li').remove();
-  $('#dbgpane .assertres').text('OK');
+  $('#dbgpane .assertres').text('');
   $('#dbgpane .reqmethod').text('');
   $('#dbgpane .requri').text('');
   $('#dbgpane .reqheaders').text('');
@@ -235,12 +108,12 @@ function updateEdtDebug( )
   $('#dbgpane .respheaders').text('');
   $('#dbgpane .respbody').text('');
   
-  if( !execState ) {
+  if( !execValid() ) {
     return;
   }
   
-  for( varName in execState.vars ) {
-    var varVal = execState.vars[varName];
+  for( varName in execContext.variables ) {
+    var varVal = execContext.variables[varName];
     
     var varData = $('<li></li>');
     varData.append("<b>#"+varName+"</b>");
@@ -249,41 +122,41 @@ function updateEdtDebug( )
     $('#dbgpane .varlist').append(varData);
   }
   
-  if( execState.lastAssert ) {
-    $('#dbgpane .assertres').text(execState.lastAssert);
+  if( execContext.lastError ) {
+    $('#dbgpane .assertres').text(execContext.lastError);
   }
-  if( execState.lastRest ) {
-    if( execState.lastRest.reqMethod ) {
-      $('#dbgpane .reqmethod').text(execState.lastRest.reqMethod);
+  if( execContext.lastRequest ) {
+    if( execContext.lastRequest.reqMethod ) {
+      $('#dbgpane .reqmethod').text(execContext.lastRequest.reqMethod);
     }
-    if( execState.lastRest.reqUri ) {
-      $('#dbgpane .requri').text(execState.lastRest.reqUri);
+    if( execContext.lastRequest.reqUri ) {
+      $('#dbgpane .requri').text(execContext.lastRequest.reqUri);
     }
-    if( execState.lastRest.reqHeaders ) {
+    if( execContext.lastRequest.reqHeaders ) {
       var headerLines = [];
-      for( headerName in execState.lastRest.reqHeaders ) {
-        headerLines.push(capString(headerName) + ": " + execState.lastRest.reqHeaders[headerName]);
+      for( headerName in execContext.lastRequest.reqHeaders ) {
+        headerLines.push(capString(headerName) + ": " + execContext.lastRequest.reqHeaders[headerName]);
       }
       $('#dbgpane .reqheaders').text(headerLines.join("\n"));
       hljs.highlightBlock($('#dbgpane .reqheaders')[0]);
     }
-    if( execState.lastRest.reqBody ) {
-      $('#dbgpane .reqbody').text(execState.lastRest.reqBody);
+    if( execContext.lastRequest.reqBody ) {
+      $('#dbgpane .reqbody').text(execContext.lastRequest.reqBody);
       hljs.highlightBlock($('#dbgpane .reqbody')[0]);
     }
-    if( execState.lastRest.respStatus ) {
-      $('#dbgpane .respstatus').text(execState.lastRest.respStatus + " " + execState.lastRest.respStatusText);
+    if( execContext.lastRequest.respStatus ) {
+      $('#dbgpane .respstatus').text(execContext.lastRequest.respStatus + " " + execContext.lastRequest.respStatusText);
     }
-    if( execState.lastRest.respHeaders ) {
+    if( execContext.lastRequest.respHeaders ) {
       var headerLines = [];
-      for( headerName in execState.lastRest.respHeaders ) {
-        headerLines.push(capString(headerName) + ": " + execState.lastRest.respHeaders[headerName]);
+      for( headerName in execContext.lastRequest.respHeaders ) {
+        headerLines.push(capString(headerName) + ": " + execContext.lastRequest.respHeaders[headerName]);
       }
       $('#dbgpane .respheaders').text(headerLines.join("\n"));
       hljs.highlightBlock($('#dbgpane .respheaders')[0]);
     }
-    if( execState.lastRest.respBody ) {
-      $('#dbgpane .respbody').text(execState.lastRest.respBody);
+    if( execContext.lastRequest.respBody ) {
+      $('#dbgpane .respbody').text(execContext.lastRequest.respBody);
       hljs.highlightBlock($('#dbgpane .respbody')[0]);
     }
   }
@@ -297,13 +170,13 @@ function initEdtDebug( ) {
   $('#actionbar .step').click(function(){
     stepExec(function(){
       updateEdtDebug( );
-      if( execState.actIdx >= editItem.actions.length ) {
+      if( execActIdx() >= execMaxAct() ) {
         $('#actionbar .step').attr('disabled','disabled');
       }
     });
   });
   $('#actionbar .restart').click(function(){
-    resetExec();
+    resetExec( editItemStack );
     updateEdtDebug( );
   });
   updateEdtDebug( );
@@ -323,7 +196,7 @@ function edtStopProc( )
 
 function edtBeginDebug( )
 {
-    beginExec( editItem );
+    beginExec( editItemStack );
     $('#actionbar .begindbg').attr('disabled','disabled');
     $('#actionbar .step').removeAttr('disabled');
     $('#actionbar .restart').removeAttr('disabled');
@@ -394,7 +267,7 @@ function buildItem( container, data, depth )
   
   if( data.type == 'test' ) {
   	lbltext.click(function(){
-  		startEditor(data);
+  		startEditorById(data.id);
   	});
   }
   
@@ -416,14 +289,23 @@ function buildItem( container, data, depth )
   }
 }
 
-function _findById( id, list )
+function _findById( id, list, parents )
 {
+  if (!parents) parents = []
+  
   for( itemId in list ) {
     var item = list[itemId];
-    if( item.id == id ) {
-      return item;
+    
+    var newParents = parents.slice();
+    if( item.type == 'test' ) {
+      newParents.unshift(item);
     }
-    var obj = _findById( id, item.children );
+    
+    if( item.id == id ) {
+      return newParents;
+    }
+    
+    var obj = _findById( id, item.children, newParents );
     if( obj ) return obj;
   }
   return null;
@@ -431,15 +313,16 @@ function _findById( id, list )
 
 function startEditorById( id )
 {
-  var item = _findById( id, itemData );
-  if( item ) {
-    startEditor( item );
+  var items = _findById( id, itemData );
+  if( items && items.length > 0 ) {
+    _startEditor( items );
   }
 }
 
-function startEditor( data )
+function _startEditor( data )
 {	
-	editItem = data;
+	editItem = data[0]
+	editItemStack = data;
 	edtStopDebug( );
 	updateEditor( );
 }
@@ -447,6 +330,7 @@ function startEditor( data )
 function stopEditor( )
 {
 	editItem = null;
+	edtStopDebug();
 	updateEditor( );	
 }
 
@@ -501,10 +385,10 @@ function resetActionEditor( )
   $('#editactiondlg #headers').val( '' );
   $('#editactiondlg #body').val( '' );
   $('#editactiondlg #leftType').val( 'variable' );
-  $('#editactiondlg #left').val( '' );
+  $('#editactiondlg #actionLeftVal').val( '' );
   $('#editactiondlg #cmpType').val( 'not_blank' );
   $('#editactiondlg #rightType').val( 'constant' );
-  $('#editactiondlg #right').val( '' );
+  $('#editactiondlg #actionRightVal').val( '' );
 }
 
 function beginActionEditor( )
