@@ -45,25 +45,26 @@ function execMaxAct( )
   return execState.actions.length;
 }
 
+function initExecContext( execContext )
+{
+  execContext.variables['url'] = 'http://api.archiegameserver.com:3335';
+}
+
 function beginExec( data )
 {
   var actStack = [];
   for( i in data ) {
     actStack.push(data[i].actions);
   }
-  console.log(actStack);
+
   execContext = new ExecContext();
-  execContext.variables['url'] = 'http://api.archiegameserver.com:3335';
+  initExecContext(execContext);
   execState = new ExecEngine(execContext, actStack);
 }
 
 function resetExec( data )
 {
-  var actStack = [];
-  for( i in data ) {
-    actStack.push(data[i].actions);
-  }
-  execState = new ExecEngine(execContext, actStack);
+  beginExec( data );
 }
 
 function stopExec( )
@@ -178,6 +179,7 @@ function initEdtDebug( ) {
   $('#actionbar .restart').click(function(){
     resetExec( editItemStack );
     updateEdtDebug( );
+    edtStopProc();
   });
   updateEdtDebug( );
 }
@@ -249,6 +251,9 @@ function buildItem( container, data, depth )
   mdnBtn.button();
   delBtn.button();
   
+  runBtn.click(function(){
+    runTest(data);
+  });
   grpBtn.click(function(){
     var name = prompt("What would you like to name this new group?", "New Group");
     if( !name ) return;
@@ -260,7 +265,7 @@ function buildItem( container, data, depth )
     createNewTest( data.id, name );
   });
   delBtn.click(function(){
-    if(confirm('Are you sure you want to delete the test `' + data.name + '`?')) {
+    if(confirm('Are you sure you want to delete the test `' + data.name + ' AND all its children`?')) {
       removeItem(data.id);
     }
   });
@@ -309,6 +314,86 @@ function _findById( id, list, parents )
     if( obj ) return obj;
   }
   return null;
+}
+
+function _execTest( items, done )
+{
+  var actStack = [];
+  for( i in items ) {
+    actStack.push(items[i].actions);
+  }
+
+  execContext = new ExecContext();
+  initExecContext(execContext);
+  execState = new ExecEngine(execContext, actStack);
+  execState.run(function(err){
+    done(err);
+  });
+}
+
+function _runTest( data, done )
+{
+  var items = _findById( data.id, itemData );
+  if( items && items.length > 0 ) {
+    
+    $('#testrun').append('<div class="testname">' + data.name + '</div>');
+    
+    var tmpRunning = $('<div class="testrunning">Running...</div>');
+    $('#testrun').append(tmpRunning);
+    
+    _execTest( items, function(err) {
+      tmpRunning.remove( );
+      if( err ) {
+        $('#testrun').append('<div class="reserror"> - Error: ' + err.message + '</div>');
+      } else {
+        $('#testrun').append('<div class="resokay"> - OK</div>');
+      }
+      
+      done(err);
+    });
+    
+  } else {
+    done();
+  }
+}
+
+function _buildTestList( data, list )
+{
+  if( !data ) return;
+  if( data.type == 'test' ) {
+    list.push( data );
+  }
+  for( v in data.children ) {
+    _buildTestList( data.children[v], list );
+  }
+}
+
+function runTest( data )
+{
+  $('#testrun').children().remove();
+  $('#testrun').dialog('open');
+  $('#testrun').on( "dialogbeforeclose", function(event,ui) {
+    alert('Cannot close the test runner while tests are still in progress.')
+    return false;
+  });
+  var testList = [];
+  _buildTestList( data, testList );
+  
+  doOneTest = function() {
+    if( testList.length == 0 ) {
+      $('#testrun').append('<div class="testscomplete">Completed!</div>');
+      $('#testrun').off( "dialogbeforeclose" );
+      return;
+    }
+    
+    var thisTest = testList.shift();
+    _runTest( thisTest, function(err){
+      doOneTest();
+    })
+  };
+  doOneTest();
+  console.log( testList );
+
 }
 
 function startEditorById( id )
@@ -576,11 +661,22 @@ function stopActionSort( event, ui )
 
 function initEditor( )
 {
+  $('#testrun').dialog({
+    height: 640,
+    width: 600,
+    autoOpen: false,
+    modal: true,
+    title: 'Running Tests',
+    position: 'center',
+    draggable: true
+  });
+  
   $('#editpane .newaction').click(function(){
     resetActionEditor();
     startActionEditor({});
   });
-
+  
+  $('#editpane #btnedittitle').button();
 }
 
 function updateEditor( )
@@ -603,6 +699,14 @@ function updateEditor( )
     handle: 'span.type',
     start: startActionSort,
     stop: stopActionSort
+  });
+  
+  $('#editpane #btnedittitle').off('click');
+  $('#editpane #btnedittitle').click(function(){
+    var newName = prompt('Please enter a new name for this test.', editItem.name );
+    if( newName && newName != editItem.name ) {
+      renameTest( editItem.id, newName );
+    }
   });
 }
 
@@ -800,6 +904,23 @@ function removeItem( id )
     contentType: 'application/json',
     data: JSON.stringify({
       itemId: id
+    }),
+    success: handleItemData
+  });
+}
+
+function renameTest( itemId, name )
+{
+  startNavUpdate();
+  $.ajax({
+    type: 'POST',
+    url: 'api/renametest',
+    dataType: 'json',
+    processData: false,
+    contentType: 'application/json',
+    data: JSON.stringify({
+      itemId: itemId,
+      name: name
     }),
     success: handleItemData
   });

@@ -179,6 +179,7 @@ window.ExecEngine = class _ExecEngine
       @_evaluateCodeAction action, done
   
   stepOne: (done) ->
+    @context.lastError = null
     @_evaluateAction @actions[@actionIdx], (err) =>
       if err
         @context.lastError = err.message

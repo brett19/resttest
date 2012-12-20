@@ -69,6 +69,17 @@ findById = (id, done) ->
 app.get '/api/data', (req,res,next) ->
   res.send fData.items
   
+app.post '/api/renametest', (req,res,next) ->
+  id = parseInt(req.body.itemId)
+  newName = req.body.name
+  
+  findById id, (err,obj,parent) ->
+    if err then return next err
+    
+    obj.name = newName
+    saveData()
+    res.send fData.items
+  
 app.post '/api/delitem', (req,res,next) ->
   id = parseInt(req.body.itemId)
   

@@ -124,6 +124,14 @@ body {
 	margin: 0px;
 }
 
+#editpane #btnedittitle {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  top: 2px;
+  left: 12px;
+}
+
 #actpane .panewrapper {
   overflow: auto;
   padding: 6px;
@@ -318,7 +326,29 @@ body {
 }
 
 
+#testrun .testname {
+  font-weight: bold;
+}
 
+#testrun .testrunning {
+  font-style: italic;
+}
+
+#testrun .reserror {
+  color: #cc0000;
+  margin: 0px 0px 8px 0px;
+}
+
+#testrun .resokay {
+  olor: #00cc00;
+  margin: 0px 0px 8px 0px;
+}
+
+#testrun .testscomplete {
+  font-size: 13px;
+  font-weight: bold;
+  color: #444444;
+}
 
 
 

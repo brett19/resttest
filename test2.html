@@ -17,6 +17,9 @@
     <meta name="author" content="root" />
   </head>
   <body>
+    <div id="testrun">  
+    </div>
+    
     <table cellspacing="0" cellpadding="0" id="wrapper">
       <tr>
         <td colspan="2" id="header">
@@ -46,7 +49,7 @@
         		<table cellspacing="0" cellpadding="0">
         			<tr>
         				<td id="actpane"><div class="panewrapper">
-        					<div id="acttitle"><span class="title">-</span></div>
+        					<div id="acttitle"><span class="title">-</span> <button id="btnedittitle" class="ui-icon ui-icon-pencil">Edit</button></div>
         					<ul id="actlist">
         						<li class="action store-action">
         							<div class="marker ui-icon ui-icon-arrowthick-1-e"></div>
@@ -149,7 +152,7 @@
                     <ul class="varlist">
                     </ul>
                     <br>
-                    <div class="title">Last Error: </div>
+                    <div class="title">Last Result: </div>
                     <pre><code class="assertres"></code></pre>
                     <br>
                     <div class="title">Last Request Method: </div>

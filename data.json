@@ -1,5 +1,5 @@
 {
-  "autoincrement": 1028,
+  "autoincrement": 1044,
   "items": [
     {
       "id": 1,
@@ -15,16 +15,99 @@
               "id": 3,
               "type": "test",
               "name": "Create Account",
-              "children": [],
-              "actions": [
+              "children": [
                 {
-                  "id": 100,
-                  "type": "store",
-                  "leftType": "variable",
-                  "left": "gameKey1",
-                  "rightType": "value",
-                  "right": "356a192b7913b04c54574d18c28d46e6395428ab"
-                },
+                  "id": 1033,
+                  "type": "test",
+                  "name": "Login Game 1",
+                  "children": [
+                    {
+                      "id": 1040,
+                      "type": "test",
+                      "name": "Get Gifts",
+                      "children": [],
+                      "actions": [
+                        {
+                          "type": "parent",
+                          "id": 1042
+                        },
+                        {
+                          "type": "rest",
+                          "method": "GET",
+                          "uri": "#url/game/da4b9237bacccdf19c0760cab7aec4a8359010b0/gifts",
+                          "headers": {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer #testSessKey"
+                          },
+                          "body": "",
+                          "id": 1043
+                        }
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": "parent",
+                      "id": 1041
+                    },
+                    {
+                      "type": "rest",
+                      "method": "POST",
+                      "uri": "#url/game/da4b9237bacccdf19c0760cab7aec4a8359010b0/session",
+                      "headers": {
+                        "Content-Type": "application/json"
+                      },
+                      "body": "{\n  \"email\": \"#testEmail\",\n  \"pswd\": \"password\"\n}",
+                      "id": 1034
+                    },
+                    {
+                      "type": "assert",
+                      "leftType": "expression",
+                      "left": "$._status",
+                      "comparator": "equal",
+                      "rightType": "value",
+                      "right": 200,
+                      "id": 1035
+                    },
+                    {
+                      "type": "assert",
+                      "leftType": "expression",
+                      "left": "$.sessKey",
+                      "comparator": "not_blank",
+                      "rightType": "variable",
+                      "right": "",
+                      "id": 1036
+                    },
+                    {
+                      "type": "assert",
+                      "leftType": "expression",
+                      "left": "$.user",
+                      "comparator": "not_blank",
+                      "rightType": "variable",
+                      "right": "",
+                      "id": 1037
+                    },
+                    {
+                      "type": "assert",
+                      "leftType": "expression",
+                      "left": "$.user.devices",
+                      "comparator": "not_blank",
+                      "rightType": "variable",
+                      "right": "",
+                      "id": 1038
+                    },
+                    {
+                      "type": "store",
+                      "leftType": "variable",
+                      "left": "testSessKey",
+                      "rightType": "expression",
+                      "right": "$.sessKey",
+                      "id": 1039
+                    }
+                  ]
+                }
+              ],
+              "actions": [
                 {
                   "id": 101,
                   "type": "store",
@@ -34,123 +117,43 @@
                   "right": "randomEmail"
                 },
                 {
-                  "id": 114,
-                  "type": "store",
-                  "leftType": "variable",
-                  "left": "sessToken",
-                  "rightType": "value",
-                  "right": "ThisIsATestSessionToken"
-                },
-                {
                   "type": "rest",
                   "method": "POST",
-                  "uri": "#url/game/#gameKey1/session",
+                  "uri": "#url/account",
                   "headers": {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer #sessToken"
+                    "Content-Type": "application/json"
                   },
-                  "body": "{\n      \"email\": \"#testEmail\",\n      \"pswd\": \"password\",\n      \"device\": {\n          \"deviceId\": \"01-02-03-04-05-06\",\n          \"manufacturer\": \"Samsung\",\n          \"hwType\": \"Galaxy Nexus\",\n          \"osType\": \"Android\",\n          \"osVersion\": \"4.2.1\"\n      }\n}",
-                  "id": 102
+                  "body": "{\n    \"lang\": \"en\",\n    \"email\": \"#testEmail\",\n    \"pswd\": \"password\"\n}",
+                  "id": 1028
                 },
                 {
-                  "id": 103,
                   "type": "assert",
                   "leftType": "expression",
                   "left": "$._status",
                   "comparator": "equal",
                   "rightType": "value",
-                  "right": 200
+                  "right": 200,
+                  "id": 1029
                 },
                 {
-                  "id": 104,
                   "type": "assert",
                   "leftType": "expression",
-                  "left": "$.sessKey",
-                  "comparator": "not_blank"
-                },
-                {
-                  "id": 105,
-                  "type": "assert",
-                  "leftType": "expression",
-                  "left": "$.sessKey",
-                  "comparator": "is_a",
+                  "left": "$.lang",
+                  "comparator": "equal",
                   "rightType": "value",
-                  "right": "string"
+                  "right": "en",
+                  "id": 1031
                 },
                 {
-                  "id": 106,
                   "type": "assert",
                   "leftType": "expression",
-                  "left": "$.user",
-                  "comparator": "not_blank"
-                },
-                {
-                  "id": 107,
-                  "type": "assert",
-                  "leftType": "expression",
-                  "left": "$.somethingrandom",
-                  "comparator": "is_blank",
-                  "right": ""
+                  "left": "$.email",
+                  "comparator": "equal",
+                  "rightType": "variable",
+                  "right": "testEmail",
+                  "id": 1030
                 }
               ]
-            },
-            {
-              "id": 4,
-              "type": "test",
-              "name": "Login",
-              "children": [
-                {
-                  "id": 1007,
-                  "type": "test",
-                  "name": "SubTest",
-                  "children": [],
-                  "actions": [
-                    {
-                      "type": "parent",
-                      "id": 1008
-                    },
-                    {
-                      "type": "store",
-                      "leftType": "variable",
-                      "left": "testVar2",
-                      "rightType": "value",
-                      "right": "LUVVERS",
-                      "id": 1009
-                    }
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": "store",
-                  "leftType": "variable",
-                  "left": "testVar",
-                  "rightType": "value",
-                  "right": "HELL YEA!",
-                  "id": 1006
-                }
-              ]
-            },
-            {
-              "id": 1004,
-              "type": "test",
-              "name": "New Test",
-              "children": [],
-              "actions": []
-            }
-          ]
-        },
-        {
-          "id": 5,
-          "type": "group",
-          "name": "Bug Tests",
-          "children": [
-            {
-              "id": 6,
-              "type": "test",
-              "name": "SOCAPI-19",
-              "children": [],
-              "actions": []
             }
           ]
         },
@@ -282,5 +285,5 @@
       ]
     }
   ],
-  "version": 50
+  "version": 85
 }
