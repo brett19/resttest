@@ -350,7 +350,13 @@ body {
   color: #444444;
 }
 
-
+.prompt_dialog {
+  width: auto;
+}
+.prompt_dialog .answer {
+  width: 100%;
+  display: block;
+}
 
 
 

@@ -76,38 +76,48 @@ window.ExecEngine = class _ExecEngine
     
     @context.lastRequest = null
     
-    $.ajax
-      type: 'POST'
-      url: 'api/proxy',
-      dataType: 'json'
-      processData: false
-      contentType: 'application/json'
-      data: JSON.stringify
-        method: reqMethod
-        uri: reqUri
-        headers: reqHeaders
-        body: reqBody
-      success: (data) =>
-        if data.status == 'error'
-          return done new Error("Internal Error: request proxy server error: `" + data.message + "`")
-        else
-          @context.lastRequest = data
-          try
-            # Try to parse as JSON
-            @context.lastRequest.respBodyObj = JSON.parse(data.respBody)
-            # Regenerate JSON string to format it
-            @context.lastRequest.respBody = JSON.stringify(@context.lastRequest.respBodyObj,null,'  ')
-          catch e
-            # Do Nothing
+    myReq = new XMLHttpRequest()
+    myReq.onreadystatechange = () =>
+      if myReq.readyState is 4
+        respHeaders = {}
+        headerLines = myReq.getAllResponseHeaders().split("\n")
+        for header in headerLines
+          headerSpl = header.split(": ")
+          if headerSpl[0] and headerSpl[1]
+            respHeaders[ headerSpl[0] ] = headerSpl[1]
             
-          @context.lastRequest.exprData = $.extend(true, {
-            "_status": @context.lastRequest.respStatus,
-            "_headers": @context.lastRequest.respHeaders
-          }, @context.lastRequest.respBodyObj);
+        @context.lastRequest = 
+          reqMethod: reqMethod
+          reqUri: reqUri
+          reqHeaders: reqHeaders
+          reqBody: reqBody
+          respStatus: myReq.status
+          respStatusText: myReq.statusText
+          respHeaders: respHeaders
+          respBody: myReq.responseText
+        
+        try
+          # Try to parse as JSON
+          @context.lastRequest.respBodyObj = JSON.parse(@context.lastRequest.respBody)
+          # Regenerate JSON string to format it
+          @context.lastRequest.respBody = JSON.stringify(@context.lastRequest.respBodyObj,null,'  ')
+        catch e
+          # Do Nothing
           
-          return done null
-      error: () =>
-        return done new Error("Internal Error: request proxy error")
+        @context.lastRequest.exprData = $.extend(true, {
+          "_status": @context.lastRequest.respStatus,
+          "_headers": @context.lastRequest.respHeaders
+        }, @context.lastRequest.respBodyObj);
+        
+        return done null
+        
+    myReq.open reqMethod, reqUri
+    for headerName,headerValue of reqHeaders
+      myReq.setRequestHeader headerName, headerValue
+    myReq.send(reqBody);
+    
+    
+
 
   _evaluateStoreAction: (action, done) ->
     # Ensure this is valid
@@ -153,6 +163,9 @@ window.ExecEngine = class _ExecEngine
     else if action.comparator is 'lesser_equal'
       unless leftValue <= rightValue
         return done new Error("Assertion Failed: #{action.leftType} `#{action.left}` (#{JSON.stringify(leftValue)}) must be less or equal to #{action.rightType} `#{action.right}` (#{JSON.stringify(rightValue)})")
+    else if action.comparator is 'is_a'
+      unless typeof(leftValue) == rightValue
+        return done new Error("Assertion Failed: type of #{action.leftType} `#{action.left}` (#{JSON.stringify(leftValue)}) must be #{action.rightType} `#{action.right}` (#{JSON.stringify(rightValue)})")
     done(null)
     
   _evaluateParentAction: (action, done) ->

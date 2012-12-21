@@ -47,7 +47,6 @@ function execMaxAct( )
 
 function initExecContext( execContext )
 {
-  execContext.variables['url'] = 'http://api.archiegameserver.com:3335';
 }
 
 function beginExec( data )
@@ -255,19 +254,22 @@ function buildItem( container, data, depth )
     runTest(data);
   });
   grpBtn.click(function(){
-    var name = prompt("What would you like to name this new group?", "New Group");
-    if( !name ) return;
-    createNewGroup( data.id, name );
+    _prompt("What would you like to name this new group?", "New Group", function(name){
+      if( !name ) return;
+      createNewGroup( data.id, name );
+    });
   });
   tstBtn.click(function(){
-    var name = prompt("What would you like to name this new test?", "New Test");
-    if( !name ) return;
-    createNewTest( data.id, name );
+    _prompt("What would you like to name this new test?", "New Test", function(name) {
+      if( !name ) return;
+      createNewTest( data.id, name );
+    });
   });
   delBtn.click(function(){
-    if(confirm('Are you sure you want to delete the test `' + data.name + ' AND all its children`?')) {
+    _confirm('Are you sure you want to delete the test `' + data.name + ' AND all its children`?',function(res){
+      if(!res) return
       removeItem(data.id);
-    }
+    })
   });
   
   if( data.type == 'test' ) {
@@ -294,7 +296,7 @@ function buildItem( container, data, depth )
   }
 }
 
-function _findById( id, list, parents )
+function _findTestById( id, list, parents )
 {
   if (!parents) parents = []
   
@@ -310,7 +312,7 @@ function _findById( id, list, parents )
       return newParents;
     }
     
-    var obj = _findById( id, item.children, newParents );
+    var obj = _findTestById( id, item.children, newParents );
     if( obj ) return obj;
   }
   return null;
@@ -333,7 +335,7 @@ function _execTest( items, done )
 
 function _runTest( data, done )
 {
-  var items = _findById( data.id, itemData );
+  var items = _findTestById( data.id, itemData );
   if( items && items.length > 0 ) {
     
     $('#testrun').append('<div class="testname">' + data.name + '</div>');
@@ -398,7 +400,7 @@ function runTest( data )
 
 function startEditorById( id )
 {
-  var items = _findById( id, itemData );
+  var items = _findTestById( id, itemData );
   if( items && items.length > 0 ) {
     _startEditor( items );
   }
@@ -466,7 +468,7 @@ function resetActionEditor( )
 {
   $('#editactiondlg #actionType').val( 'rest' );
   $('#editactiondlg #actionMethod').val( 'GET' );
-  $('#editactiondlg #uri').val( '/' );
+  $('#editactiondlg #uri').val( '' );
   $('#editactiondlg #headers').val( '' );
   $('#editactiondlg #body').val( '' );
   $('#editactiondlg #leftType').val( 'variable' );
@@ -520,7 +522,6 @@ function beginActionEditor( )
   }
  
   updateActionEditor( );
-  
 }
 
 function updateActionEditor( )
@@ -611,7 +612,9 @@ function stopActionEditor( )
     for( headerIdx in headerData ) {
       var headerInfo = headerData[headerIdx];
       var headerSpl = headerInfo.split(': ');
-      headers[ headerSpl[0] ] = headerSpl[1];
+      if( headerSpl[0] && headerSpl[1] ) {
+        headers[ headerSpl[0] ] = headerSpl[1];
+      }
     }
     
     newAction.method = $('#editactiondlg #actionMethod').val();
@@ -672,8 +675,9 @@ function initEditor( )
   });
   
   $('#editpane .newaction').click(function(){
-    resetActionEditor();
-    startActionEditor({});
+    resetActionEditor( );
+    editAction = {}; 
+    updateActionEditor( );
   });
   
   $('#editpane #btnedittitle').button();
@@ -814,9 +818,10 @@ function insertAction( act, item )
 		startActionEditor( act );
 	});
 	actItem.find('.deletebtn').click(function(){
-		if(confirm('Are you sure you want to delete this action?')) {
-			removeAction( act.id, item.id );
-		}
+		_confirm('Are you sure you want to delete this action?',function(res){
+		  if (!res) return;
+		  removeAction( act.id, item.id );
+		});
 	});
 
 	actItem.find('button.ui-icon').button();	
@@ -826,148 +831,303 @@ function insertAction( act, item )
 function createAction( itemId, data )
 {
   startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'api/newaction',
-    dataType: 'json',
-    processData: false,
-    contentType: 'application/json',
-    data: JSON.stringify({
-      itemId: itemId,
-      data: data
-    }),
-    success: handleItemData
+  
+  ensureLoaded(function(){
+    findById(itemId, function(err,obj,parent) {
+      data.id = getNextId();
+      obj.actions.push(data);
+      
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+    });
   });
+
 }
 
 function moveAction( itemId, actId, afterActId )
 {
   startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'api/moveaction',
-    dataType: 'json',
-    processData: false,
-    contentType: 'application/json',
-    data: JSON.stringify({
-      itemId: itemId,
-      id: actId,
-      afterId: afterActId
-    }),
-    success: handleItemData
+  
+  ensureLoaded(function(){
+    findById(itemId, function(err,obj,parent) {
+      var foundActionIdx = -1;
+      for(i in obj.actions) {
+        var action = obj.actions[i];
+        if (action.id == actId) {
+          foundActionIdx = i;
+          break;
+        }
+      }
+      
+      movedActions = obj.actions.splice(foundActionIdx, 1);
+      
+      var foundActionAfterIdx = -1;
+      for(i in obj.actions) {
+        var action = obj.actions[i];
+        if (action.id == afterActId) {
+          foundActionAfterIdx = i;
+          break;
+        }
+      }
+      
+      obj.actions.splice(foundActionAfterIdx+1, 0, movedActions[0]);
+     
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+    });
   });
 }
 
 function updateAction( itemId, actId, data )
 {
   startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'api/updateaction',
-    dataType: 'json',
-    processData: false,
-    contentType: 'application/json',
-    data: JSON.stringify({
-      itemId: itemId,
-      id: actId,
-      data: data
-    }),
-    success: handleItemData
+  
+  ensureLoaded(function(){
+    findById(itemId, function(err,obj,parent) {
+      data.id = actId;
+      
+      newActions = [];
+      for(i in obj.actions) {
+        var action = obj.actions[i];
+        if (action.id == actId) {
+          newActions.push(data);
+        } else {
+          newActions.push(action);
+        }
+      }
+      obj.actions = newActions;
+      
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+    });
   });
 }
 
 function removeAction( id, itemId )
 {
   startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'api/delaction',
-    dataType: 'json',
-    processData: false,
-    contentType: 'application/json',
-    data: JSON.stringify({
-      id: id,
-      itemId: itemId
-    }),
-    success: handleItemData
+  
+  ensureLoaded(function(){
+    findById(itemId, function(err,obj,parent) {
+      newActions = [];
+      for(i in obj.actions) {
+        var action = obj.actions[i];
+        if (action.id != id) {
+          newActions.push(action);
+        }
+      }
+      obj.actions = newActions;
+      
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+    });
   });
 }
 
 function removeItem( id )
 {
   startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'api/delitem',
-    dataType: 'json',
-    processData: false,
-    contentType: 'application/json',
-    data: JSON.stringify({
-      itemId: id
-    }),
-    success: handleItemData
+  
+  ensureLoaded(function(){
+    findById(id, function(err,obj,parent){
+      var newChildren = []
+      for (itemIdx in parent.children) {
+        var item = parent.children[itemIdx];
+        if( item.id != id ) {
+          newChildren.push(item);
+        }
+      }
+      parent.children = newChildren;
+      
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+    });
   });
 }
 
 function renameTest( itemId, name )
 {
   startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'api/renametest',
-    dataType: 'json',
-    processData: false,
-    contentType: 'application/json',
-    data: JSON.stringify({
-      itemId: itemId,
-      name: name
-    }),
-    success: handleItemData
+  
+  ensureLoaded(function(){
+    findById(itemId, function(err,obj,parent){
+      obj.name = name;
+  
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+  });
   });
 }
 
 function createNewGroup( parentId, name )
 {
   startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'api/newgroup',
-    dataType: 'json',
-    processData: false,
-    contentType: 'application/json',
-    data: JSON.stringify({
-      parentId: parentId,
-      name: name
-    }),
-    success: handleItemData
+  
+  ensureLoaded(function(){
+    findById(parentId, function(err,obj,parent){
+      obj.children.push({
+        id: getNextId(),
+        type: 'group',
+        name: name,
+        children: []
+      });
+    
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+    });
   });
 }
 
 function createNewTest( parentId, name )
 {
   startNavUpdate();
-  $.ajax({
-    type: 'POST',
-    url: 'api/newtest',
-    dataType: 'json',
-    processData: false,
-    contentType: 'application/json',
-    data: JSON.stringify({
-      parentId: parentId,
-      name: name
-    }),
-    success: handleItemData
+
+  ensureLoaded(function(){
+    findById(parentId, function(err,obj,parent){
+      obj.children.push({
+        id: getNextId(),
+        type: 'test',
+        name: name,
+        children: [],
+        actions: []
+      });
+   
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      })
+    });
   });
+
+}
+
+var fData = null
+function ensureLoaded(done)
+{
+  if( fData ) {
+    done();
+  } else {
+    chrome.storage.local.get( null, function(data) {
+      fData = data;
+      
+      console.log(fData);
+      
+      if( !fData.autoincrement ) {
+        fData.autoincrement = 1;
+      }
+    
+      if( !fData.items ) {
+        fData.items = [{
+          "id": getNextId(),
+          "type": "group",
+          "name": "My Tests",
+          "children": []
+        }];
+      }
+      
+      console.log(fData);
+      
+      if (done) {
+        done();
+      }
+    });
+  }
+}
+
+function ensureSaved(done)
+{
+  console.log('save');
+  console.log(fData);
+  chrome.storage.local.set(fData,function(){
+    console.log(chrome.runtime.lastError);
+    if (done) {
+      done();
+    }
+  });
+}
+
+function _confirm(question, done) {
+  var answer = $('<div class="prompt_dialog"><span class="question">'+question+'</span></div>');
+  var result = false;
+  answer.dialog({
+    title: "Confirm",
+    width: "400px",
+    modal: true,
+    buttons:{
+      "Ok": function() {
+        result = true;
+        answer.dialog("close");
+      },
+      "Cancel": function() {
+        answer.dialog("close");
+      }
+    },
+    close: function(){
+      done(result);
+    }
+  });
+}
+
+function _prompt(question, defaultAnswer, done) {
+  var answer = $('<div class="prompt_dialog"><span class="question">'+question+'</span><input type="text" class="answer" /></div>');
+  answer.find('.answer').val(defaultAnswer);
+  var result = null;
+  answer.dialog({
+    title: "Prompt",
+    width: "400px",
+    modal: true,
+    buttons:{
+      "Ok": function() {
+        result = answer.find('.answer').val();
+        answer.dialog("close");
+      },
+      "Cancel": function() {
+        answer.dialog("close");
+      }
+    },
+    close: function(){
+      done(result);
+    }
+  });
+}
+
+function _findById(id, list, parent) {
+  for( itemIdx in list ) {
+    item = list[itemIdx];
+    if( item.id == id ) {
+      return [item, parent];
+    }
+    fndinfo = _findById(id, item.children, item)
+    if(fndinfo) return fndinfo;
+  }
+  return null;
+}
+
+function findById(id, done) {
+  obj = _findById(id, fData.items, null);
+  if( !obj ) {
+    done( new Error('id not found') );
+  } else {
+    done( null, obj[0], obj[1] ); 
+  }
+}
+
+function getNextId()
+{
+  return fData.autoincrement++;
 }
 
 function loadItemData()
 {
   startNavUpdate();
-  $.ajax({
-    type: 'GET',
-    url: 'api/data',
-    dataType: 'json',
-    success: handleItemData
+  ensureLoaded(function(){
+    handleItemData( fData.items );
   });
 }
 
@@ -992,7 +1152,7 @@ function startNavUpdate( )
 {
   itemData = [];
   $('#itemlist li').remove();
-  $('#itemlist_load').show();
+  //$('#itemlist_load').show();
   if( editItem ) {
     prevEditId = editItem.id;
   }
