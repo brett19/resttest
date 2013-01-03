@@ -91,7 +91,7 @@
         _this = this;
       reqMethod = action.method;
       reqUri = action.uri;
-      reqHeaders = action.headers;
+      reqHeaders = $.extend({}, action.headers);
       reqBody = action.body;
       _ref = this.context.variables;
       for (varName in _ref) {

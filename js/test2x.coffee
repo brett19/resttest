@@ -65,7 +65,7 @@ window.ExecEngine = class _ExecEngine
   _evaluateRequestAction: (action, done) ->
     reqMethod = action.method;
     reqUri = action.uri;
-    reqHeaders = action.headers;
+    reqHeaders = $.extend({},action.headers);
     reqBody = action.body;
     
     for varName,varValue of @context.variables

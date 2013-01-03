@@ -256,10 +256,11 @@ function buildItem( container, data, depth )
       "newgroup": { name: "New Group" },
       "sep1": "---------",
       "import": { name: "Import from Web" },
-      "export": { name: "Export to Web" },
+      "export": { name: "Export to Web" }
   };
   if( depth > 0 ) {
-    ctxItems['sepdel'] = "---------";
+    ctxItems['sep2'] = "---------";
+    ctxItems['rename'] = { name: "Rename" };
     ctxItems['delete'] = { name: 'Delete' };
   }
   
@@ -277,18 +278,26 @@ function buildItem( container, data, depth )
           if( !name ) return;
           createNewGroup( data.id, name );
         });
+      } else if (key == 'rename') {
+        _prompt('Please enter a new name for this test.', data.name, function(newName) {
+          if( !newName || newName == data.name ) return;
+          renameTest( data.id, newName );
+        });
       } else if (key == 'delete') {
-        _confirm('Are you sure you want to delete `' + data.name + ' AND all its children`?',function(res){
-          if(!res) return
+        _confirm('Are you sure you want to delete `' + data.name + '` AND all its children?',function(res){
+          if(!res) return;
           removeItem(data.id);
         });
       } else if (key == 'export') {
-        _confirm('Are you sure you want to export `' + data.name + ' AND all its children`?',function(res){
-          if(!res) return
+        _confirm('Are you sure you want to export `' + data.name + '` AND all its children?',function(res){
+          if(!res) return;
           exportItem(data.id);
         });
       } else if (key == 'import') {
-        importTest(data.id);
+        _prompt('Please enter the path to import from', '', function(path){
+          if( !path ) return;
+          importItem(data.id, path);
+        });
       }
     },
     items: ctxItems
@@ -667,9 +676,12 @@ function startActionSort( event, ui )
 function stopActionSort( event, ui )
 {
   var prevItem = ui.item.prev();
-  var prevActionId = null;
+  var prevActionId = -1;
   if( prevItem ) {
-    prevActionId = parseInt(prevItem.attr('data-actionId'));
+    var strActionId = prevItem.attr('data-actionId');
+    if( strActionId !== null && strActionId !== undefined ) {
+      prevActionId = parseInt(strActionId);
+    }
   }
   actionId = parseInt(ui.item.attr('data-actionId'));
   
@@ -872,8 +884,9 @@ function moveAction( itemId, actId, afterActId )
   
   ensureLoaded(function(){
     findById(itemId, function(err,obj,parent) {
+
       var foundActionIdx = -1;
-      for(i in obj.actions) {
+      for(var i = 0; i < obj.actions.length; ++i) {
         var action = obj.actions[i];
         if (action.id == actId) {
           foundActionIdx = i;
@@ -884,16 +897,18 @@ function moveAction( itemId, actId, afterActId )
       movedActions = obj.actions.splice(foundActionIdx, 1);
       
       var foundActionAfterIdx = -1;
-      for(i in obj.actions) {
-        var action = obj.actions[i];
-        if (action.id == afterActId) {
-          foundActionAfterIdx = i;
-          break;
+      if( afterActId >= 0 ) {
+        for(var i = 0; i < obj.actions.length; ++i) {
+          var action = obj.actions[i];
+          if (action.id == afterActId) {
+            foundActionAfterIdx = i;
+            break;
+          }
         }
       }
-      
-      obj.actions.splice(foundActionAfterIdx+1, 0, movedActions[0]);
      
+      obj.actions.splice(foundActionAfterIdx+1, 0, movedActions[0]);
+
       ensureSaved(function(){
         handleItemData( fData.items );
       });
@@ -957,11 +972,54 @@ function exportItem( id )
       $.ajax({
         type: 'POST',
         url: 'http://resttesttool.info/upload.php',
-        processData: false,
-        data: JSON.stringify(obj),
+        data: {
+          data: JSON.stringify(obj)
+        },
+        dataType: 'text',
+        success: function(data) {
+          _alertValue("resttest://" + data, "Test Exporter");
+        }
+      });
+      
+    });
+  });
+}
+
+
+function _recursiveReassignId(data) {
+  if( data.id ) {
+    data.id = getNextId();
+  }
+  if( data instanceof Array || data instanceof Object ) {
+    for( v in data ) {
+      _recursiveReassignId(data[v]);
+    }
+  }
+}
+
+function importItem( id, path )
+{
+  startNavUpdate();
+   
+  ensureLoaded(function(){
+    findById(id, function(err,obj,parent){
+      
+      var realUrl = path;
+      if( realUrl.substr(0,11) == 'resttest://') {
+        realUrl = "http://resttesttool.info/test.php?id=" + realUrl.substr(11);
+      }
+      
+      $.ajax({
+        type: 'GET',
+        url: realUrl,
         dataType: 'json',
         success: function(data) {
-          alert(JSON.stringify(data));
+          _recursiveReassignId(data);
+          obj.children.push(data);
+           
+          ensureSaved(function(){
+            handleItemData( fData.items );
+          });
         }
       });
       
@@ -1089,6 +1147,22 @@ function ensureSaved(done)
     console.log(chrome.runtime.lastError);
     if (done) {
       done();
+    }
+  });
+}
+
+function _alertValue(question,title) {
+  var answer = $('<div class="prompt_dialog"><input type="text" value="' + question + '" class="question" disabled="disabled"></div>');
+  var result = false;
+  answer.dialog({
+    title: title,
+    width: "400px",
+    modal: true,
+    buttons:{
+      "Ok": function() {
+        result = true;
+        answer.dialog("close");
+      }
     }
   });
 }
