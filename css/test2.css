@@ -358,9 +358,9 @@ body {
   display: block;
 }
 
-
-
-
+.context-menu-item {
+  padding: 2px 4px 2px 6px;
+}
 
 
 

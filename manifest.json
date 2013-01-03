@@ -1,6 +1,6 @@
 {
   "name": "REST Test",
-  "version": "0.3.1",
+  "version": "0.3.4",
   "manifest_version": 2,
   "description": "RESTTest allows you to write an ordered sequence of actions and assertions to test a REST (or other) API.",
   "icons":{
@@ -16,6 +16,7 @@
   },
   "offline_enabled": true,
   "permissions":[
+    "http://resttesttool.info/*",
     "http://*/*",
     "https://*/*",
     "storage"

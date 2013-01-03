@@ -216,12 +216,16 @@ var editItem = null;
 var editAction = null;
 var prevEditId = 0;
 
+var buildItemIdx = 0;
 function buildItem( container, data, depth )
 {
+  var buildItemId = 'builtItem' + buildItemIdx++;
+  
   var item = $('<li></li>');
   var label = $('<label></label>');
   var lbltext = $('<span></span>');
   var childul = $('<ul></ul>');
+  var optBtn = $('<div class="ui-icon ui-icon-gear ' + buildItemId + '">More...</div>');
   var runBtn = $('<div class="ui-icon ui-icon-play">Run</div>');
   var tstBtn = $('<div class="ui-icon ui-icon-plusthick">New Test</div>');
   var grpBtn = $('<div class="ui-icon ui-icon-folder-collapsed">New Group</div>');
@@ -243,35 +247,57 @@ function buildItem( container, data, depth )
     item.addClass( 'item test' );
   }
   lbltext.text( data.name );
-  runBtn.button();
-  tstBtn.button();
-  grpBtn.button();
-  mupBtn.button();
-  mdnBtn.button();
-  delBtn.button();
   
+  optBtn.button();
+  runBtn.button();
+  
+  ctxItems = {
+      "newtest": { name: "New Test" },
+      "newgroup": { name: "New Group" },
+      "sep1": "---------",
+      "import": { name: "Import from Web" },
+      "export": { name: "Export to Web" },
+  };
+  if( depth > 0 ) {
+    ctxItems['sepdel'] = "---------";
+    ctxItems['delete'] = { name: 'Delete' };
+  }
+  
+  $.contextMenu({
+    selector: '.'+buildItemId,
+    trigger: 'left',
+    callback: function(key, options) {
+      if (key == 'newtest') {
+        _prompt("What would you like to name this new test?", "New Test", function(name) {
+          if( !name ) return;
+          createNewTest( data.id, name );
+        });
+      } else if (key == 'newgroup') {
+        _prompt("What would you like to name this new group?", "New Group", function(name){
+          if( !name ) return;
+          createNewGroup( data.id, name );
+        });
+      } else if (key == 'delete') {
+        _confirm('Are you sure you want to delete `' + data.name + ' AND all its children`?',function(res){
+          if(!res) return
+          removeItem(data.id);
+        });
+      } else if (key == 'export') {
+        _confirm('Are you sure you want to export `' + data.name + ' AND all its children`?',function(res){
+          if(!res) return
+          exportItem(data.id);
+        });
+      } else if (key == 'import') {
+        importTest(data.id);
+      }
+    },
+    items: ctxItems
+  });
+
   runBtn.click(function(){
     runTest(data);
   });
-  grpBtn.click(function(){
-    _prompt("What would you like to name this new group?", "New Group", function(name){
-      if( !name ) return;
-      createNewGroup( data.id, name );
-    });
-  });
-  tstBtn.click(function(){
-    _prompt("What would you like to name this new test?", "New Test", function(name) {
-      if( !name ) return;
-      createNewTest( data.id, name );
-    });
-  });
-  delBtn.click(function(){
-    _confirm('Are you sure you want to delete the test `' + data.name + ' AND all its children`?',function(res){
-      if(!res) return
-      removeItem(data.id);
-    })
-  });
-  
+ 
   if( data.type == 'test' ) {
   	lbltext.click(function(){
   		startEditorById(data.id);
@@ -279,13 +305,8 @@ function buildItem( container, data, depth )
   }
   
   label.append(runBtn);
-  label.append(tstBtn);
-  label.append(grpBtn);
-  //label.append(mupBtn);
-  //label.append(mdnBtn);
-  if( depth > 0 ) {
-    label.append(delBtn);
-  }
+  label.append(optBtn);
+  
   label.append(lbltext);
   item.append(label);
   item.append(childul);
@@ -924,6 +945,26 @@ function removeAction( id, itemId )
       ensureSaved(function(){
         handleItemData( fData.items );
       });
+    });
+  });
+}
+
+function exportItem( id )
+{
+  ensureLoaded(function(){
+    findById(id, function(err,obj,parent){
+      
+      $.ajax({
+        type: 'POST',
+        url: 'http://resttesttool.info/upload.php',
+        processData: false,
+        data: JSON.stringify(obj),
+        dataType: 'json',
+        success: function(data) {
+          alert(JSON.stringify(data));
+        }
+      });
+      
     });
   });
 }
