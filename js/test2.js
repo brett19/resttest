@@ -1080,12 +1080,20 @@ function exportItem( id )
 
 
 function _recursiveReassignId(data) {
+  if( !data ) return;
   if( data.id ) {
     data.id = getNextId();
   }
-  if( data instanceof Array || data instanceof Object ) {
-    for( v in data ) {
-      _recursiveReassignId(data[v]);
+  if( data instanceof Object ) {
+    if( data.children ) {
+      for( v in data.children ) {
+        _recursiveReassignId(data.children[v])
+      }
+    }
+    if( data.actions ) {
+      for( var v = 0; v < data.actions.length; ++v ) {
+        _recursiveReassignId(data.actions[v]);
+      }
     }
   }
 }
