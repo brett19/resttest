@@ -1,3 +1,5 @@
+var pageClipboard = null;
+
 function capString( str ) {
   return str.replace(/^(.)|(\s|\-)(.)/g, function(x){return x.toUpperCase();})
 }
@@ -116,8 +118,8 @@ function updateEdtDebug( )
     var varVal = execContext.variables[varName];
     
     var varData = $('<li></li>');
-    varData.append("<b>#"+varName+"</b>");
-    varData.append('<br />');
+    varData.append("<b>#"+varName+"</b> => ");
+    //varData.append('<br />');
     varData.append(JSON.stringify(varVal));
     $('#dbgpane .varlist').append(varData);
   }
@@ -180,6 +182,7 @@ function initEdtDebug( ) {
     updateEdtDebug( );
     edtStopProc();
   });
+  $('#reqresptabs').tabs();
   updateEdtDebug( );
 }
 
@@ -221,17 +224,12 @@ function buildItem( container, data, depth )
 {
   var buildItemId = 'builtItem' + buildItemIdx++;
   
-  var item = $('<li></li>');
+  var item = $('<li class="' + buildItemId + '"></li>');
   var label = $('<label></label>');
-  var lbltext = $('<span></span>');
+  var exco = $('<span class="exco">- </span>');
+  var lbltext = $('<div class="title"></div>');
   var childul = $('<ul></ul>');
-  var optBtn = $('<div class="ui-icon ui-icon-gear ' + buildItemId + '">More...</div>');
-  var runBtn = $('<div class="ui-icon ui-icon-play">Run</div>');
-  var tstBtn = $('<div class="ui-icon ui-icon-plusthick">New Test</div>');
-  var grpBtn = $('<div class="ui-icon ui-icon-folder-collapsed">New Group</div>');
-  var mupBtn = $('<div class="ui-icon ui-icon-triangle-1-n"></div>');
-  var mdnBtn = $('<div class="ui-icon ui-icon-triangle-1-s"></div>');
-  var delBtn = $('<div class="ui-icon ui-icon-trash">Delete</div>');
+  var runBtn = $('<div class="btn ui-icon ui-icon-play">Run</div>');
   
   // For debugging
   item.attr('data-itemId', data.id);
@@ -247,8 +245,7 @@ function buildItem( container, data, depth )
     item.addClass( 'item test' );
   }
   lbltext.text( data.name );
-  
-  optBtn.button();
+
   runBtn.button();
   
   ctxItems = {
@@ -266,7 +263,7 @@ function buildItem( container, data, depth )
   
   $.contextMenu({
     selector: '.'+buildItemId,
-    trigger: 'left',
+    trigger: 'right',
     callback: function(key, options) {
       if (key == 'newtest') {
         _prompt("What would you like to name this new test?", "New Test", function(name) {
@@ -308,21 +305,36 @@ function buildItem( container, data, depth )
   });
  
   if( data.type == 'test' ) {
-  	lbltext.click(function(){
+  	label.click(function(){
   		startEditorById(data.id);
+  		
+  		$('#nav ul li.selected').removeClass('selected');
+  		item.addClass('selected');
   	});
   }
   
   label.append(runBtn);
-  label.append(optBtn);
-  
+  label.append(exco);
   label.append(lbltext);
   item.append(label);
   item.append(childul);
   container.append(item);
-  
+
   for( child in data.children ) {
     buildItem( childul, data.children[child], depth+1 );
+  }
+  
+  if( childul.children().length <= 0 ) {
+    exco.text('~ ');
+  } else {
+    label.dblclick(function(){
+      childul.toggle();
+      if( childul.is(':visible') ) {
+        exco.text('- ');
+      } else {
+        exco.text('+ ');
+      }
+    });
   }
 }
 
@@ -695,6 +707,48 @@ function stopActionSort( event, ui )
   preMovePrevActionId = null;
 }
 
+function actValDisplay( type, value )
+{
+  if(type == 'expression') {
+    return value;
+  } else if(type == 'value') {
+    return JSON.stringify(value);
+  } else if(type == 'function') {
+    return value + '()';
+  } else if(type == 'variable') {
+    return '#' + value;
+  } else if(type == '' || !value) {
+    return '';
+  } else {
+    return '??? ' + value + ' ???';
+  }
+}
+
+function actCmpDisplay( comparator )
+{
+  if( comparator == 'equal' ) {
+    return 'is equal to';
+  } else if( comparator == 'not_equal' ) {
+    return 'is not equal to';
+  } else if( comparator == 'greater') {
+    return 'is greater than';
+  } else if( comparator == 'lesser') {
+    return 'is less than';
+  } else if( comparator == 'greater_equal') {
+    return 'is greater or equal to';
+  } else if( comparator == 'lesser_equal') {
+    return 'is less or equal to';
+  } else if( comparator == 'is_a' ) {
+    return 'is a';
+  } else if( comparator == 'is_blank' ) {
+    return 'is blank';
+  } else if( comparator == 'not_blank' ) {
+    return 'is not blank';
+  } else {
+    return '??? ' + comparator + ' ???';
+  }
+}
+
 function initEditor( )
 {
   $('#testrun').dialog({
@@ -711,6 +765,10 @@ function initEditor( )
     resetActionEditor( );
     editAction = {}; 
     updateActionEditor( );
+  });
+  
+  $('#editpane .pasteaction').click(function(){
+    pasteAction(editItem.id);
   });
   
   $('#editpane #btnedittitle').button();
@@ -731,13 +789,13 @@ function updateEditor( )
 	for( actId in editItem.actions ) {
 		insertAction( editItem.actions[actId], editItem );
 	}
-	
+
   $( "#actlist" ).sortable({
     handle: 'span.type',
     start: startActionSort,
     stop: stopActionSort
   });
-  
+ 
   $('#editpane #btnedittitle').off('click');
   $('#editpane #btnedittitle').click(function(){
     var newName = prompt('Please enter a new name for this test.', editItem.name );
@@ -747,55 +805,17 @@ function updateEditor( )
   });
 }
 
-function actValDisplay( type, value )
-{
-	if(type == 'expression') {
-		return value;
-	} else if(type == 'value') {
-		return JSON.stringify(value);
-	} else if(type == 'function') {
-		return value + '()';
-	} else if(type == 'variable') {
-		return '#' + value;
-	} else if(type == '' || !value) {
-		return '';
-	} else {
-		return '??? ' + value + ' ???';
-	}
-}
-
-function actCmpDisplay( comparator )
-{
-	if( comparator == 'equal' ) {
-		return 'is equal to';
-	} else if( comparator == 'not_equal' ) {
-		return 'is not equal to';
-  } else if( comparator == 'greater') {
-    return 'is greater than';
-  } else if( comparator == 'lesser') {
-    return 'is less than';
-  } else if( comparator == 'greater_equal') {
-    return 'is greater or equal to';
-  } else if( comparator == 'lesser_equal') {
-    return 'is less or equal to';
-	} else if( comparator == 'is_a' ) {
-		return 'is a';
-	} else if( comparator == 'is_blank' ) {
-		return 'is blank';
-	} else if( comparator == 'not_blank' ) {
-		return 'is not blank';
-	} else {
-		return '??? ' + comparator + ' ???';
-	}
-}
-
 function insertAction( act, item )
 {
-	actItem = $('<li class="action"></li>');
+  if( !act || !act.id ) return;
+  
+  var buildItemId = 'builtItem' + buildItemIdx++;
+  
+	var actItem = $('<li class="action ' + buildItemId + '"></li>');
 	actItem.append( '<div class="marker"></div>' );
 	actItem.append( '<span class="type">...</span>' );
 	actItem.append( '<label>...</label>' );
-    actItem.append('<div class="tools"><button class="btn editbtn ui-icon ui-icon-pencil">Edit</button><button class="btn deletebtn ui-icon ui-icon-trash">Delete</button></div>');
+  //actItem.append('<div class="tools"><button class="btn editbtn ui-icon ui-icon-pencil">Edit</button><button class="btn deletebtn ui-icon ui-icon-trash">Delete</button></div>');
 
   // For tracking re-ordering
   actItem.attr('data-actionId', act.id);
@@ -846,16 +866,32 @@ function insertAction( act, item )
 	} else if( act.type == 'parent' ) {
 	  actItem.find('label').html('Execute Parent Test');
 	}
-	
-	actItem.find('.editbtn').click(function(){
-		startActionEditor( act );
-	});
-	actItem.find('.deletebtn').click(function(){
-		_confirm('Are you sure you want to delete this action?',function(res){
-		  if (!res) return;
-		  removeAction( act.id, item.id );
-		});
-	});
+
+  $.contextMenu({
+    selector: '.'+buildItemId,
+    trigger: 'right',
+    callback: function(key, options) {
+      if( key == 'edit' ) {
+        startActionEditor( act );
+      } else if( key == 'copy' ) {
+        copyAction( act.id, item.id );
+      } else if( key == 'duplicate' ) {
+        duplicateAction( act.id, item.id );
+      } else if( key == 'delete' ) {
+        _confirm('Are you sure you want to delete this action?',function(res){
+          if (!res) return;
+          removeAction( act.id, item.id );
+        });
+      }
+    },
+    items: {
+      'edit': { name: 'Edit' },
+      'copy': { name: 'Copy' },
+      'duplicate': { name: 'Duplicate' },
+      'sep1': '---',
+      'delete': { name: 'Delete' }
+    }
+  });
 
 	actItem.find('button.ui-icon').button();	
 	$('#actlist').append( actItem );
@@ -909,6 +945,63 @@ function moveAction( itemId, actId, afterActId )
      
       obj.actions.splice(foundActionAfterIdx+1, 0, movedActions[0]);
 
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+    });
+  });
+}
+
+function copyAction( id, itemId )
+{
+  ensureLoaded(function(){
+    findById(itemId, function(err,obj,parent) {
+      for(i in obj.actions) {
+        var action = obj.actions[i];
+        if( action.id == id ) {
+          pageClipboard = $.extend({},action);
+        }
+      }
+    });
+  });
+}
+
+function pasteAction( itemId )
+{
+  if( !pageClipboard ) return;
+  startNavUpdate();
+  ensureLoaded(function(){
+    findById(itemId, function(err,obj,parent) {
+      var newAction = $.extend({},pageClipboard);
+      newAction.id = getNextId();
+      obj.actions.push(newAction);
+      
+      ensureSaved(function(){
+        handleItemData( fData.items );
+      });
+    });
+  });
+}
+
+function duplicateAction( id, itemId )
+{
+  startNavUpdate();
+  ensureLoaded(function(){
+    findById(itemId, function(err,obj,parent) {
+      newActions = [];
+      for(i in obj.actions) {
+        var action = obj.actions[i];
+        newActions.push(action);
+        if( action.id == id ) {
+          console.log('DUPLICATING');
+          var newAction = $.extend({}, action);
+          newAction.id = getNextId();
+          console.log(newAction);
+          newActions.push(newAction);
+        }
+      }
+      obj.actions = newActions;
+      
       ensureSaved(function(){
         handleItemData( fData.items );
       });
@@ -1251,6 +1344,15 @@ function updateItemList( )
   for( item in itemData ) {
     buildItem( $('#itemlist'), itemData[item], 0 );
   }
+  
+  /*
+  $('#itemlist').nestedSortable({
+    handle: 'label',
+    items: 'li',
+    listType: 'ul',
+    toleranceElement: '> label'
+  });
+  */
 }
 
 function handleItemData( data ) {
@@ -1275,6 +1377,10 @@ function startNavUpdate( )
 }
 
 $(document).ready(function(){
+  $.ajaxSetup({
+    timeout: 12000
+  });
+  
   $('#nav #topbar .refresh').button();
   $('button.ui-icon').button();
   

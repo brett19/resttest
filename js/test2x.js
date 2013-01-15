@@ -105,6 +105,7 @@
       }
       this.context.lastRequest = null;
       myReq = new XMLHttpRequest();
+      myReq.timeout = 12000;
       myReq.onreadystatechange = function() {
         var header, headerLines, headerSpl, respHeaders, _i, _len;
         if (myReq.readyState === 4) {

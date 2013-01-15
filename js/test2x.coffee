@@ -77,6 +77,7 @@ window.ExecEngine = class _ExecEngine
     @context.lastRequest = null
     
     myReq = new XMLHttpRequest()
+    myReq.timeout = 12000
     myReq.onreadystatechange = () =>
       if myReq.readyState is 4
         respHeaders = {}

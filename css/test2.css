@@ -9,6 +9,12 @@ body {
   font-size: 11px;
 }
 
+.ui-widget {
+  font-family: Tahoma;
+  font-size: 11px;
+}
+
+
 #wrapper {
   width: 100%;
   height: 100%;
@@ -47,7 +53,7 @@ body {
 #nav ul {
   list-style-type: none;
   margin: 0px;
-  padding: 0px;
+  padding: 0px 0px 0px 8px;
 }
 
 #nav ul li ul {
@@ -59,25 +65,38 @@ body {
 }
 #nav ul > li > label {
   display: block;
-  width: 100%;
+  width: auto;
+  padding: 2px 0px;
+  padding-left: 24px;
+  text-indent: -24px;
+}
+#nav ul > li > label .exco {
+  display: inline-block;
+  font-weight: bold;
+  font-family: 'Arial Black';
+  font-size: 12px;
+  width: 16px;
+  padding-left: 0px;
+  text-indent: 0px;
 }
 #nav ul label:hover {
   background-color: #dddddd;
   border-radius: 4px;
 }
-#nav ul li.item div {
+#nav ul > li.selected > label {
+  background-color: #C9EAFF;
+  border-radius: 4px;
+}
+#nav ul li.item div.btn {
   float: right;
 }
-#nav ul li.item span {
-  display: block;
-  padding: 2px 8px;
+#nav ul li.item .title {
+  display: inline;
 }
 #nav ul > li.group > label {
   font-weight: bold;
 }
 #nav ul > li.test > label {
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 #nav {
@@ -373,10 +392,6 @@ body {
 .context-menu-item {
   padding: 2px 4px 2px 6px;
 }
-
-
-
-
 
 
 

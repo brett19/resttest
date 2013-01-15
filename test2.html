@@ -14,11 +14,14 @@
     <script type="text/javascript" src="js/highlight.min.js"></script>
     <script type="text/javascript" src="js/jsonpath-0.8.0.js"></script>
     <script type="text/javascript" src="js/jquery.contextMenu.js"></script>
+    <script type="text/javascript" src="js/jquery.mjs.nestedSortable.js"></script>
+    <script type="text/javascript" src="js/jquery.zclip.min.js"></script>
     <script type="text/javascript" src="js/test2x.js"></script>
     <script type="text/javascript" src="js/test2.js"></script>
     <meta name="author" content="Brett Lawson" />
   </head>
   <body>
+    <div id="temp"></div>
     <div id="testrun">  
     </div>
     
@@ -67,6 +70,7 @@
         						</li>
         					</ul>
         					<button class="newaction ui-icon ui-icon-document-b">New Action</button>
+        					<button class="pasteaction ui-icon ui-icon-clipboard">Paste Action</button>
         					<div id="editactiondlg">
         					  <form>
         					    <fieldset>
@@ -161,26 +165,35 @@
                     <div class="title">Last Result: </div>
                     <pre><code class="assertres"></code></pre>
                     <br>
-                    <div class="title">Last Request Method: </div>
-                    <pre><code class="reqmethod"></code></pre>
-                    <br>
-                    <div class="title">Last Request URI: </div>
-                    <pre><code class="requri"></code></pre>
-                    <br>
-                    <div class="title">Last Request Headers: </div>
-                    <pre><code class="json reqheaders"></code></pre>
-                    <br>
-                    <div class="title">Last Request Body: </div>
-                    <pre><code class="json reqbody"></code></pre>
-                    <br>
-                    <div class="title">Last Response Status:</div>
-                    <pre><code class="respstatus"></code></pre>
-                    <br>
-                    <div class="title">Last Response Headers: </div>
-                    <pre><code class="json respheaders"></code></pre>
-                    <br>
-                    <div class="title">Last Response Body: </div>
-                    <pre><code class="json respbody"></code></pre>
+                    <div id="reqresptabs">
+                      <ul>
+                        <li><a href="#dbgrequest">Request</a></li>
+                        <li><a href="#dbgresponse">Response</a></li>
+                      </ul>
+                      <div id="dbgrequest">
+                        <div class="title">Last Request Method: </div>
+                        <pre><code class="reqmethod"></code></pre>
+                        <br>
+                        <div class="title">Last Request URI: </div>
+                        <pre><code class="requri"></code></pre>
+                        <br>
+                        <div class="title">Last Request Headers: </div>
+                        <pre><code class="json reqheaders"></code></pre>
+                        <br>
+                        <div class="title">Last Request Body: </div>
+                        <pre><code class="json reqbody"></code></pre>
+                      </div>
+                      <div id="dbgresponse">
+                        <div class="title">Last Response Status:</div>
+                        <pre><code class="respstatus"></code></pre>
+                        <br>
+                        <div class="title">Last Response Headers: </div>
+                        <pre><code class="json respheaders"></code></pre>
+                        <br>
+                        <div class="title">Last Response Body: </div>
+                        <pre><code class="json respbody"></code></pre>
+                      </div>
+                    </div>
                   </div>
         				</div></td>
         			</tr>
